@@ -24,7 +24,7 @@ public:
         
     }    
 };
-
+//Aggiunto commento
 struct nodeTree* Newn(char data,double freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
