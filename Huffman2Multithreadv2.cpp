@@ -87,7 +87,8 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
     saveEncode(node->right,str+"1",Huffcode);
 }
 
-void BodyParallel(map<char,double> &mpp,int p)
+//function for compute the frequency in parallel
+void BodyParallel(int p,  vector<map<char,double>> &listmps)
 {   
     int first,last;
     first=delta*p;
@@ -95,17 +96,42 @@ void BodyParallel(map<char,double> &mpp,int p)
         last=len;
     else
         last=(p+1)*delta;
+    cout << "first: " << first << " last: " << last << endl;
     for(int i=first;i<last;i++)
     {
-        //Inserire lock
-        char c=myString[i];
-        Lockmp.lock();
-           mpp[c]++;
-           
-        Lockmp.unlock();
-        //Inserire lock
+       
+       listmps[p][myString[i]]++;
     }
 }
+void ComputeFrequency(map<char,double> &mpp)
+{
+    vector<thread*> Threads; //vector of thread
+    vector<map<char,double>> listmps(w);
+    len=myString.size();
+    delta=len/w;
+    cout << "Delta" << delta << "Worker" << w << endl;
+    for(int i=0;i<w;i++)
+    {
+        Threads.push_back(new thread(BodyParallel,i,ref(listmps)));
+    }
+    for(auto t: Threads)
+    {
+        t->join();
+    }
+    map<char,double>::iterator it;
+    for(auto a: listmps)
+    {
+        it=a.begin();
+        while (it != a.end())
+        {
+            mpp[it->first]=mpp[it->first]+it->second;
+            ++it;
+        }
+    }
+
+}
+
+// Functions for parallel transform the string in binary values 
 void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode)
 {   
      
@@ -151,7 +177,7 @@ int main(int argc, char * argv[])
     
     ifstream myfile;
     string temp; //size of the string
-    vector<thread*> Threads; //vector of thread
+    
     long usec;
     
     w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
@@ -162,18 +188,8 @@ int main(int argc, char * argv[])
             myfile >>myString;
         }
     }
-    len=myString.size();
-    delta=len/w;
     map<char,double> mpp;
-    for(int i=0;i<w;i++)
-    {
-       
-        Threads.push_back(new thread(BodyParallel,ref(mpp),i));
-    }
-    for(auto t: Threads)
-    {
-        t->join();
-    }
+    ComputeFrequency(ref(mpp));
     map<char, double>::iterator it = mpp.begin();
     it = mpp.begin();
     cout << "Num of workers:" << w << endl;
