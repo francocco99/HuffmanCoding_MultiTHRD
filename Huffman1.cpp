@@ -3,8 +3,11 @@
 #include <vector>
 #include <queue>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <algorithm>
+#include <bitset>
+#include "utimer.hpp"
 using namespace std;
 typedef pair<char,double> pai;
 struct nodeTree
@@ -94,43 +97,81 @@ int main()
     string temp;
     float len;
     vector<pai> vec;
-
-    myfile.open("text2.txt");
-    if(myfile.is_open()) {
-        while (myfile)
+    string result;
+    ifstream t("text3.txt");
+    ofstream out("textOut.bin",ios::out | ios::binary);
+    ofstream out2("textOut2.txt");
+    stringstream buf;
+    buf << t.rdbuf();
+    
+    myString=buf.str();
+  //  cout << myString << endl;
+    //take the number of occurences for each char
+      long usecs; 
+    {
+        utimer t0("parallel computation",&usecs); 
+        for(char&c : myString)
+        {         
+            mpp[c]=mpp[c]+1.0;
+        }
+        map<char, double>::iterator it = mpp.begin();
+        len=myString.size();
+    // Iterate through the map and print the elements
+        /*while (it != mpp.end())
         {
-            myfile >>myString;
+            it->second= it->second/len;
+            ++it;
+        }
+        it = mpp.begin();
+        while (it != mpp.end())
+        {
+            std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+            ++it;
+        }*/
+        
+        map <char,string>Huffcode;
+        nodeTree* Root=BuildHuffman(mpp);
+        saveEncode(Root,"",Huffcode);
+        
+         result=" ";
+        for(char&c : myString)
+        { 
+            result=result+Huffcode[c];
         }
     }
-    //take the number of occurences for each char
-    for(char&c : myString)
-    {         
-        mpp[c]=mpp[c]+1.0;
-    }
-    map<char, double>::iterator it = mpp.begin();
-    len=myString.size();
-  // Iterate through the map and print the elements
-    while (it != mpp.end())
+    cout << "End (spent " << usecs << " usecs" << endl;
+    out2 << result;
+   
+    unsigned bufs=0, bits=0;
+   
+   
+    
+    
+    
+    // write in the file
+    for(char a: result)
     {
-        it->second= it->second/len;
-        ++it;
+        
+       if(bits==8)
+        {
+           
+            out.put(bufs);      
+            bufs=0;
+            bits=0;
+        }
+        else
+        {
+            bufs=(bufs<<1) | (atoi(&a) & 1);
+            bits++;
+        }
     }
-    it = mpp.begin();
-    while (it != mpp.end())
+    if(bits>=8)
     {
-        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
-        ++it;
+        bits-=8;
+        out.put(bufs >>bits);
     }
     
-    map <char,string>Huffcode;
-    nodeTree* Root=BuildHuffman(mpp);
-    saveEncode(Root,"",Huffcode);
+
     
-    string result=" ";
-    for(char&c : myString)
-    { 
-        result=result+Huffcode[c];
-    }
-    cout<< "Result of Encoding is: " << result << endl; 
        
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <algorithm>
 #include <execution>
@@ -96,7 +97,7 @@ void BodyParallel(int p,  vector<map<char,double>> &listmps)
         last=len;
     else
         last=(p+1)*delta;
-    cout << "first: " << first << " last: " << last << endl;
+   // cout << "first: " << first << " last: " << last << endl;
     for(int i=first;i<last;i++)
     {
        
@@ -109,7 +110,6 @@ void ComputeFrequency(map<char,double> &mpp)
     vector<map<char,double>> listmps(w);
     len=myString.size();
     delta=len/w;
-    cout << "Delta" << delta << "Worker" << w << endl;
     for(int i=0;i<w;i++)
     {
         Threads.push_back(new thread(BodyParallel,i,ref(listmps)));
@@ -178,34 +178,61 @@ int main(int argc, char * argv[])
     ifstream myfile;
     string temp; //size of the string
     
-    long usec;
+    string result;
     
     w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    myfile.open("text2.txt");
-    if(myfile.is_open()) {
-        while (myfile)
+    ifstream t("text3.txt");
+    ofstream out("textOut.bin",ios::out | ios::binary);
+    stringstream buf;
+    buf << t.rdbuf();
+    myString=buf.str();
+    unsigned bufs=0, bits=0;
+    long usecs1;
+    long usecs2;
+    long usecs3;
+    {
+        utimer t0("parallel computation",&usecs1); 
+        map<char,double> mpp;
+        ComputeFrequency(ref(mpp));
+        /*map<char, double>::iterator it = mpp.begin();
+        it = mpp.begin();
+        cout << "Num of workers:" << w << endl;
+        while (it != mpp.end())
         {
-            myfile >>myString;
+            std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+            ++it;
+        }*/
+        //Creation of the map char with frequencies
+        
+        map <char,string>Huffcode;
+        nodeTree* Root=BuildHuffman(mpp);
+        saveEncode(Root,"",Huffcode);
+        result=Encode(Huffcode);
+    }
+    cout << "End (spent " << usecs1 << " usecs using " << w << " threads)"  << endl;    
+    //cout<< "Result of Encoding is: " << result << endl;
+    // write in the file
+    for(char a: result)
+    {
+        
+       if(bits==8)
+        {
+           
+            out.put(bufs);      
+            bufs=0;
+            bits=0;
+        }
+        else
+        {
+            bufs=(bufs<<1) | (atoi(&a) & 1);
+            bits++;
         }
     }
-    map<char,double> mpp;
-    ComputeFrequency(ref(mpp));
-    map<char, double>::iterator it = mpp.begin();
-    it = mpp.begin();
-    cout << "Num of workers:" << w << endl;
-    while (it != mpp.end())
+    if(bits>=8)
     {
-        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
-        ++it;
+        bits-=8;
+        out.put(bufs >>bits);
     }
-    //Creation of the map char with frequencies
-    
-    map <char,string>Huffcode;
-    nodeTree* Root=BuildHuffman(mpp);
-    saveEncode(Root,"",Huffcode);
-    string result=Encode(Huffcode);
-    
-    cout<< "Result of Encoding is: " << result << endl;
      
        
 }

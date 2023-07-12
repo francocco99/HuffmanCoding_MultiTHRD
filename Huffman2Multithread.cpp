@@ -155,7 +155,7 @@ int main(int argc, char * argv[])
     long usec;
     
     w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    myfile.open("text2.txt");
+    myfile.open("text3.txt");
     if(myfile.is_open()) {
         while (myfile)
         {
