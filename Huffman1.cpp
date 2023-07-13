@@ -133,7 +133,7 @@ int main()
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
         
-         result=" ";
+        result=" ";
         for(char&c : myString)
         { 
             result=result+Huffcode[c];

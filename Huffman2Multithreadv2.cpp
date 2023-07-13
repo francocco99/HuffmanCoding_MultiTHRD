@@ -119,6 +119,7 @@ void ComputeFrequency(map<char,double> &mpp)
         t->join();
     }
     map<char,double>::iterator it;
+    
     for(auto a: listmps)
     {
         it=a.begin();
@@ -194,16 +195,6 @@ int main(int argc, char * argv[])
         utimer t0("parallel computation",&usecs1); 
         map<char,double> mpp;
         ComputeFrequency(ref(mpp));
-        /*map<char, double>::iterator it = mpp.begin();
-        it = mpp.begin();
-        cout << "Num of workers:" << w << endl;
-        while (it != mpp.end())
-        {
-            std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
-            ++it;
-        }*/
-        //Creation of the map char with frequencies
-        
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);

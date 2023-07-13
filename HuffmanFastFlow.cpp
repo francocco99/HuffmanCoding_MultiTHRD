@@ -4,9 +4,9 @@
 #include <map>
 #include <sstream>
 #include <ff/ff.hpp>
-#include <ff/pipeline.hpp>
-#include <ff/farm.hpp>
+
 #include <ff/parallel_for.hpp>
+#include "utimer.hpp"
 using namespace std;
 using namespace ff;
 //pipeline farm
@@ -129,33 +129,65 @@ int main(int argc, char * argv[])
     
     ifstream myfile;
     string temp; //size of the string
+    string result;
     
-    long usec;
     
     w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
     ifstream t("text3.txt");
     stringstream buf;
     buf << t.rdbuf();
     myString=buf.str();
-
-    ParallelFor pfr(w);
-    int p=0;
-    vector<map<char,double>> mps(w);
-    //map<char,double> mpp;
-    //vector<map<char,double>> mps(w);
-    pfr.parallel_for(0,myString.size(),1,0,[&](int i){
-       cout << i<< endl;;
-    });
-   /* map<char,double>::iterator it;
-    for(auto a: mps)
+    long usec;
     {
-        it=a.begin();
-        while (it != a.end())
+        utimer t0("parallel computation",&usec);
+        ParallelFor pfr(w);
+        map<char,double> mpp;
+        int p=0;
+        vector<map<char,double>> listmps(w);
+        pfr.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
+            for(int i=first;i<last;i++)
+            {
+                listmps[p][myString[i]]++;
+            }
+            p++;
+            
+        });
+        map<char,double>::iterator it;
+        for(auto a: listmps)
         {
-            std::cout << "key:  " << it->first << " Value: " <<it->second << endl;
-            ++it;
+            it=a.begin();
+            while (it != a.end())
+            {
+                mpp[it->first]=mpp[it->first]+it->second;
+                ++it;
+            }
         }
-    }*/
+        map <char,string>Huffcode;
+        nodeTree* Root=BuildHuffman(mpp);
+        saveEncode(Root,"",Huffcode);
+
+        ParallelFor pfr2(w);
+        map<pair<int,int>,string> maps;
+        pfr2.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
+        for(int i=first;i<last;i++)
+        {
+            maps[{first,last}]=maps[{first,last}]+ Huffcode[myString[i]];
+        }
+            
+        });
+
+        map<pair<int,int>,string>::iterator it2 = maps.begin();
+        while (it2 != maps.end())
+        {
+            //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
+            result= result+it2->second;
+            ++it2;
+        }
+    };
+    cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl;    
+
+    //cout << result << endl;
+   
      
        
 }
