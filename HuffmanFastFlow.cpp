@@ -130,10 +130,28 @@ int main(int argc, char * argv[])
     ifstream myfile;
     string temp; //size of the string
     string result;
+    string Filename;
+     unsigned bufs=0, bits=0;
     
+    if(argc == 2 && strcmp(argv[1],"-help")==0) {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return(0);
+    }
+    if(argc<3)
+    {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return 0;
+    }
+    w=atoi(argv[2]);
+    Filename=argv[1]; //number of workers
+    ifstream t(Filename);
+    if(t.good()==false)
+    {
+        cout << "The file: " << argv[1] << " does not exists" << endl;  
+        return 0;
+    }
     
-    w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    ifstream t("text3.txt");
+    ofstream out("textOut.bin",ios::out | ios::binary);
     stringstream buf;
     buf << t.rdbuf();
     myString=buf.str();
@@ -184,8 +202,30 @@ int main(int argc, char * argv[])
             ++it2;
         }
     };
-    cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl;    
+    cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
 
+
+     for(char a: result)
+    {
+        
+       if(bits==8)
+        {
+           
+            out.put(bufs);      
+            bufs=0;
+            bits=0;
+        }
+        else
+        {
+            bufs=(bufs<<1) | (atoi(&a) & 1);
+            bits++;
+        }
+    }
+    if(bits>=8)
+    {
+        bits-=8;
+         out.put(bufs >>bits);
+    }
     //cout << result << endl;
    
      

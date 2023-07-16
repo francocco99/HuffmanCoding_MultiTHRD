@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <functional>
 #include <vector>
 #include <queue>
@@ -178,19 +179,35 @@ int main(int argc, char * argv[])
     
     ifstream myfile;
     string temp; //size of the string
-    
+    string Filename;
     string result;
+   
     
-    w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    ifstream t("text3.txt");
+    if(argc == 2 && strcmp(argv[1],"-help")==0) {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return(0);
+    }
+    if(argc<3)
+    {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return 0;
+    }
+    w=atoi(argv[2]);
+    Filename=argv[1]; //number of workers
+    ifstream t(Filename);
+    if(t.good()==false)
+    {
+        cout << "The file: " << argv[1] << " does not exists" << endl;  
+        return 0;
+    }
+    
     ofstream out("textOut.bin",ios::out | ios::binary);
     stringstream buf;
     buf << t.rdbuf();
     myString=buf.str();
     unsigned bufs=0, bits=0;
     long usecs1;
-    long usecs2;
-    long usecs3;
+    
     {
         utimer t0("parallel computation",&usecs1); 
         map<char,double> mpp;

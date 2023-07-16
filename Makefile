@@ -1,14 +1,20 @@
-CC= gcc -std=c++11
+CC= g++ -std=c++11
 THREAD=-lpthread
 CFLAGS= -Wall  -O3
 
-huffman1: Huffman1.cpp
-	$(CC) $(CFLAGS)    Huffman1.cpp -o Huffman1.out   
+Huffman: Huffman1.cpp
+	$(CC) $(CFLAGS)  -o Huffman1.out Huffman1.cpp     
 
-huffmanMultith: HuffmanMultithreadv2.cpp
-	$(CC) $(CFLAGS) HuffmanMultithreadv2.cpp -o HuffmanMultithreadv2.out    $(THREAD) 
+HuffmanMulti: Huffman2Multithreadv2.cpp
+	$(CC) $(CFLAGS) Huffman2Multithreadv2.cpp -o HuffmanMultithreadv2.out    $(THREAD) 
+
+HuffmanFast: HuffmanFastFlow.cpp
+	$(CC) $(CFLAGS) HuffmanFastFlow.cpp -o HuffmanFastFlow.out    $(THREAD)
+
+
+all: huffman1 HuffmanMulti HuffmanFast
 
 
 
 cleanall:
-	rm -f Huffman1.out HuffmanMultithreadv2.out
+	rm -f Huffman1.out HuffmanMultithreadv2.out HuffmanFastFlow.out
