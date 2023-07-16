@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 #include <bitset>
+#include <string.h>
 #include "utimer.hpp"
 using namespace std;
 typedef pair<char,double> pai;
@@ -89,21 +90,42 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
     saveEncode(node->left,str+"0",Huffcode);
     saveEncode(node->right,str+"1",Huffcode);
 }
-int main()
+int main(int argc, char* argv[])
 {
     map<char,double> mpp;
     map <char,string>Huffcode;
     ifstream myfile;
     string myString;
+    string Filename;
     string temp;
     float len;
     vector<pai> vec;
     string result;
-    ifstream t("text3.txt");
     ofstream out("textOut.bin",ios::out | ios::binary);
-    ofstream out2("textOut2.txt");
     stringstream buf;
+    if(argc == 2 && strcmp(argv[1],"-help")==0) {
+        cout << "Usage is: " << argv[0] << " fileName" << endl; 
+        return(0);
+    }
+    if(argc==1)
+    {
+        cout << "Usage is: " << argv[0] << " fileName" << endl; 
+        return 0;
+    }
+    Filename=argv[1]; //number of workers
+    ifstream t(Filename);
+    if(t.good()==false)
+    {
+        cout << "The file: " << argv[1] << " does not exists" << endl;  
+        return 0;
+    }
     buf << t.rdbuf();
+    
+    
+    
+    
+    
+    
     
     myString=buf.str();
   //  cout << myString << endl;
@@ -138,7 +160,7 @@ int main()
     cout << "End (spent for Frequency " << freq << " usecs" << endl;
     cout << "End (spent for build and traverse " << buildtemp << " usecs" << endl;
     cout << "End (spent  encode " << encode << " usecs" << endl;
-    out2 << result;
+   
    
     unsigned bufs=0, bits=0;
    

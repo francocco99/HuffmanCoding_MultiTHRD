@@ -10,6 +10,7 @@
 #include <execution>
 #include <thread>
 #include <mutex>
+#include <string.h>
 #include "utimer.hpp"
 
 using namespace std;
@@ -179,11 +180,28 @@ int main(int argc, char * argv[])
     ifstream myfile;
     string temp; //size of the string
     map<char,double> mpp;
+    string Filename;
     map <char,string>Huffcode;
     string result;
     
-    w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    ifstream t("text3.txt");
+    if(argc == 2 && strcmp(argv[1],"-help")==0) {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return(0);
+    }
+    if(argc<3)
+    {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return 0;
+    }
+    w=atoi(argv[2]);
+    Filename=argv[1]; //number of workers
+    ifstream t(Filename);
+    if(t.good()==false)
+    {
+        cout << "The file: " << argv[1] << " does not exists" << endl;  
+        return 0;
+    }
+    
     ofstream out("textOut.bin",ios::out | ios::binary);
     stringstream buf;
     buf << t.rdbuf();

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+
 #include <sstream>
 #include <ff/ff.hpp>
 
@@ -127,23 +128,13 @@ int main(int argc, char * argv[])
     myString=buf.str();
     long usec;
     {
-        utimer t0("parallel computation",&usec);
+       utimer t0("parallel computation",&usec);
         ParallelFor pfr(w);
         map<char,int> mpp;
-        int p=0;
-        int i;
         
-        //cout << myString.size();
-        /*pfr.parallel_for(0,myString.size(),1,0,[&](int idx){
-         map<int,char> temp
-        });*/
         vector<map<char,int>> listmps(w);
         pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
-          
-            
             listmps[thid][myString[idx]]++;
-                
-            
         });
        map<char,int>::iterator it;
         for(auto a: listmps)
@@ -155,21 +146,20 @@ int main(int argc, char * argv[])
                 ++it;
             }
         }
+       
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
 
         ParallelFor pfr2(w);
-        map<pair<int,int>,string> maps;
-        pfr2.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
-        for(int i=first;i<last;i++)
-        {
-            maps[{first,last}]=maps[{first,last}]+ Huffcode[myString[i]];
-        }
+        map<int,string> maps;
+        pfr2.parallel_for_thid(0,myString.size(),1,0,[&maps,&Huffcode,&myString](const long idx,const int thid){
+            maps[thid]=maps[thid]+ Huffcode[myString[idx]];
+           
             
         });
 
-        map<pair<int,int>,string>::iterator it2 = maps.begin();
+        map<int,string>::iterator it2 = maps.begin();
         while (it2 != maps.end())
         {
             //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
@@ -177,10 +167,12 @@ int main(int argc, char * argv[])
             ++it2;
         }
     };
+
     cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
+    cout << result;
+    //cout  << usec << "," << w << endl;    
 
-
-     for(char a: result)
+    /* for(char a: result)
     {
         
        if(bits==8)
@@ -201,7 +193,7 @@ int main(int argc, char * argv[])
         bits-=8;
          out.put(bufs >>bits);
     }
-    //cout << result << endl;
+    //cout << result << endl;*/
    
      
        

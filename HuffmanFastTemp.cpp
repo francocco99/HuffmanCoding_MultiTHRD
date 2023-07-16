@@ -4,7 +4,7 @@
 #include <map>
 #include <sstream>
 #include <ff/ff.hpp>
-
+#include <string.h>
 #include <ff/parallel_for.hpp>
 #include "utimer.hpp"
 using namespace std;
@@ -12,7 +12,7 @@ using namespace ff;
 //pipeline farm
 typedef pair<char,double> pai;
 
-string myString;
+
 int delta,len;
 int w;
 
@@ -91,35 +91,8 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 
 
 // Functions for parallel transform the string in binary values 
-void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode)
-{   
-     
-    int first,last;
-    first=delta*p;
-    if(p==w-1)
-        last=len;
-    else
-        last=(p+1)*delta;
-    //cout << "first: " << first << " last: " << last << endl;
-    for(int i=first;i<last;i++)
-    {
-        mps[{first,last}]=mps[{first,last}]+ Huffcode[myString[i]];
-    }
-}
-void ComputeFrequency(map<char,double> &mpp)
-{
-   
-    
-}
-string Encode( map <char,string>Huffcode)
-{
-    ParallelFor pf(w);
-    string result;
-    pf.parallel_for(0,len,1,0,[&](const long i){
-        result=result+Huffcode[myString[i]];
-    });
-    return result;
-}
+
+
 
 int main(int argc, char * argv[])
 {
@@ -127,18 +100,39 @@ int main(int argc, char * argv[])
     ifstream myfile;
     string temp; //size of the string
     string result;
-
+    string myString;
+    string Filename;
     map <char,string>Huffcode;
     map<char,double> mpp;
     
-    w=(argc > 1 ? atoi(argv[1]) : 3); //number of workers
-    ifstream t("text3.txt");
+    if(argc == 2 && strcmp(argv[1],"-help")==0) {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return(0);
+    }
+    if(argc<3)
+    {
+        cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
+        return 0;
+    }
+    w=atoi(argv[2]);
+    Filename=argv[1]; //number of workers
+    ifstream t(Filename);
+    if(t.good()==false)
+    {
+        cout << "The file: " << argv[1] << " does not exists" << endl;  
+        return 0;
+    }
+    
+    ofstream out("textOut.bin",ios::out | ios::binary);
+    
     stringstream buf;
     buf << t.rdbuf();
     myString=buf.str();
+    
     long freq;
     long buildtemp;
     long encode;
+    
      
     {
         utimer t0("parallel computation",&freq);
@@ -146,12 +140,11 @@ int main(int argc, char * argv[])
         
         int p=0;
         vector<map<char,double>> listmps(w);
-        pfr.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
-            for(int i=first;i<last;i++)
-            {
-                listmps[p][myString[i]]++;
-            }
-            p++;
+        pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
+          
+            
+            listmps[thid][myString[idx]]++;
+                
             
         });
         map<char,double>::iterator it;

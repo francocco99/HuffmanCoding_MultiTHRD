@@ -97,7 +97,7 @@ int main(int argc,char* argv[])
     string myString;
     string Filename;
     string temp;
-    float len;
+    
     vector<pai> vec;
     string result;
     
@@ -131,8 +131,8 @@ int main(int argc,char* argv[])
         {         
             mpp[c]=mpp[c]+1.0;
         }
-        map<char, double>::iterator it = mpp.begin();
-        len=myString.size();
+       
+    
         
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
@@ -144,8 +144,8 @@ int main(int argc,char* argv[])
             result=result+Huffcode[c];
         }
     }
-    cout << "End (spent " << usecs << " usecs" << endl;
-   
+   // cout << "End (spent " << usecs << " usecs" << endl;
+    cout << usecs << ",1" << endl;
    
     unsigned bufs=0, bits=0;
     // write  the char in the files

@@ -130,6 +130,7 @@ void ComputeFrequency(map<char,double> &mpp)
             ++it;
         }
     }
+     
 
 }
 
@@ -217,7 +218,9 @@ int main(int argc, char * argv[])
         saveEncode(Root,"",Huffcode);
         result=Encode(Huffcode);
     }
-    cout << "End (spent " << usecs1 << " usecs using " << w << " threads)"  << endl;    
+    //cout << "End (spent " << usecs1 << " usecs using " << w << " threads)"  << endl;
+    //cout  << usecs1 << "," << w << endl;    
+    cout << result << endl;
     //cout<< "Result of Encoding is: " << result << endl;
     // write in the file
     for(char a: result)
