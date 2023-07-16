@@ -12,7 +12,7 @@ using namespace ff;
 //pipeline farm
 typedef pair<char,double> pai;
 
-string myString;
+
 int delta,len;
 int w;
 
@@ -44,13 +44,13 @@ struct nodeTree* Newn(char data,double freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,double> mpp)
+struct nodeTree* BuildHuffman(map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, double>::iterator it = mpp.begin();
+    map<char, int>::iterator it = mpp.begin();
     while (it != mpp.end())
     {
         pq.push(Newn(it->first,it->second));
@@ -91,42 +91,12 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 
 
 // Functions for parallel transform the string in binary values 
-void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode)
-{   
-     
-    int first,last;
-    first=delta*p;
-    if(p==w-1)
-        last=len;
-    else
-        last=(p+1)*delta;
-    //cout << "first: " << first << " last: " << last << endl;
-    for(int i=first;i<last;i++)
-    {
-        mps[{first,last}]=mps[{first,last}]+ Huffcode[myString[i]];
-    }
-}
-void ComputeFrequency(map<char,double> &mpp)
-{
-    ParallelFor pf(w);
-    pf.parallel_for(0,len,1,0,[&](const long i){
-        mpp[myString[i]]++;
-    });
-    
-}
-string Encode( map <char,string>Huffcode)
-{
-    ParallelFor pf(w);
-    string result;
-    pf.parallel_for(0,len,1,0,[&](const long i){
-        result=result+Huffcode[myString[i]];
-    });
-    return result;
-}
+
+
 
 int main(int argc, char * argv[])
 {
-    
+    string myString;
     ifstream myfile;
     string temp; //size of the string
     string result;
@@ -159,18 +129,23 @@ int main(int argc, char * argv[])
     {
         utimer t0("parallel computation",&usec);
         ParallelFor pfr(w);
-        map<char,double> mpp;
+        map<char,int> mpp;
         int p=0;
-        vector<map<char,double>> listmps(w);
-        pfr.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
-            for(int i=first;i<last;i++)
-            {
-                listmps[p][myString[i]]++;
-            }
-            p++;
+        int i;
+        
+        //cout << myString.size();
+        /*pfr.parallel_for(0,myString.size(),1,0,[&](int idx){
+         map<int,char> temp
+        });*/
+        vector<map<char,int>> listmps(w);
+        pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
+          
+            
+            listmps[thid][myString[idx]]++;
+                
             
         });
-        map<char,double>::iterator it;
+       map<char,int>::iterator it;
         for(auto a: listmps)
         {
             it=a.begin();
