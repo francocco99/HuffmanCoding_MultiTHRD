@@ -17,10 +17,12 @@ xs=datas.nw
 ys=datas.usec
 
 
-
+plt.figure(figsize=(10,10))
 plt.xlabel("number of workers")
 plt.ylabel("usecs used")
-plt.plot(xt,yt,color="green",marker="o")
-plt.plot(xf,yf,color="red",marker="*")
+plt.plot(xt,yt,color="green",marker="o",label='Thread')
+plt.plot(xf,yf,color="red",marker="*",label='Fast Flow')
+plt.plot(xs,ys,color="blue",marker="*",label='Sequential')
+plt.legend()
 
 plt.savefig("threadgraph.png")

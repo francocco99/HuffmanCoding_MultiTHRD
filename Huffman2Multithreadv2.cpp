@@ -14,7 +14,7 @@
 #include "utimer.hpp"
 
 using namespace std;
-typedef pair<char,double> pai;
+typedef pair<char,int> pai;
 mutex Lockmp;
 string myString;
 int delta,len;
@@ -22,7 +22,7 @@ int w;
 struct nodeTree
 {
     char a;
-    double freq;
+    int freq;
     nodeTree *left, *right;
 };
 
@@ -37,7 +37,7 @@ public:
     }    
 };
 //Aggiunto commento
-struct nodeTree* Newn(char data,double freq)
+struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
     temp->left = temp->right=nullptr;
@@ -47,13 +47,13 @@ struct nodeTree* Newn(char data,double freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,double> mpp)
+struct nodeTree* BuildHuffman(map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, double>::iterator it = mpp.begin();
+    map<char, int>::iterator it = mpp.begin();
     while (it != mpp.end())
     {
         pq.push(Newn(it->first,it->second));
@@ -90,7 +90,7 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 }
 
 //function for compute the frequency in parallel
-void BodyParallel(int p,  vector<map<char,double>> &listmps)
+void BodyParallel(int p,  vector<map<char,int>> &listmps)
 {   
     int first,last;
     first=delta*p;
@@ -105,10 +105,10 @@ void BodyParallel(int p,  vector<map<char,double>> &listmps)
        listmps[p][myString[i]]++;
     }
 }
-void ComputeFrequency(map<char,double> &mpp)
+void ComputeFrequency(map<char,int> &mpp)
 {
     vector<thread*> Threads; //vector of thread
-    vector<map<char,double>> listmps(w);
+    vector<map<char,int>> listmps(w);
     len=myString.size();
     delta=len/w;
     for(int i=0;i<w;i++)
@@ -119,7 +119,7 @@ void ComputeFrequency(map<char,double> &mpp)
     {
         t->join();
     }
-    map<char,double>::iterator it;
+    map<char,int>::iterator it;
     
     for(auto a: listmps)
     {
@@ -135,7 +135,7 @@ void ComputeFrequency(map<char,double> &mpp)
 }
 
 // Functions for parallel transform the string in binary values 
-void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode)
+void paralEncode(int p,vector<string>  &cds,map <char,string>Huffcode)
 {   
      
     int first,last;
@@ -147,31 +147,36 @@ void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode
     //cout << "first: " << first << " last: " << last << endl;
     for(int i=first;i<last;i++)
     {
-        mps[{first,last}]=mps[{first,last}]+ Huffcode[myString[i]];
+        cds[p]=cds[p]+ Huffcode[myString[i]];
     }
 }
 
 string Encode(map <char,string>Huffcode)
 {
     vector<thread*> Threads;
-    map<pair<int,int>,string> maps;
+    vector<string> Codes (w);
     string result;
     //cout << "non ci entro "  << w << endl;
     for(int i=0;i<w;i++)
     { 
-        Threads.push_back(new thread(paralEncode,i, ref(maps),Huffcode));
+        Threads.push_back(new thread(paralEncode,i, ref(Codes),Huffcode));
     }
     for(auto t: Threads)
     {
         t->join();
     }
-    map<pair<int,int>,string>::iterator it = maps.begin();
-    while (it != maps.end())
+   
+
+    for( string s: Codes)
+    {
+        result=result + s;
+    }
+    /*while (it != maps.end())
     {
         //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
         result= result+it->second;
         ++it;
-    }
+    }*/
     return result;
 }  
 
@@ -211,7 +216,7 @@ int main(int argc, char * argv[])
     
     {
         utimer t0("parallel computation",&usecs1); 
-        map<char,double> mpp;
+        map<char,int> mpp;
         ComputeFrequency(ref(mpp));
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
@@ -219,9 +224,8 @@ int main(int argc, char * argv[])
         result=Encode(Huffcode);
     }
     //cout << "End (spent " << usecs1 << " usecs using " << w << " threads)"  << endl;
-    //cout  << usecs1 << "," << w << endl;    
-    cout << result << endl;
-    //cout<< "Result of Encoding is: " << result << endl;
+    cout  << usecs1 << "," << w << endl;    
+    
     // write in the file
     for(char a: result)
     {

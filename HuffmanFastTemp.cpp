@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ff;
 //pipeline farm
-typedef pair<char,double> pai;
+typedef pair<char,int> pai;
 
 
 int delta,len;
@@ -19,7 +19,7 @@ int w;
 struct nodeTree
 {
     char a;
-    double freq;
+    int freq;
     nodeTree *left, *right;
 };
 
@@ -34,7 +34,7 @@ public:
     }    
 };
 //Aggiunto commento
-struct nodeTree* Newn(char data,double freq)
+struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
     temp->left = temp->right=nullptr;
@@ -44,13 +44,13 @@ struct nodeTree* Newn(char data,double freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,double> mpp)
+struct nodeTree* BuildHuffman(map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, double>::iterator it = mpp.begin();
+    map<char, int>::iterator it = mpp.begin();
     while (it != mpp.end())
     {
         pq.push(Newn(it->first,it->second));
@@ -103,7 +103,7 @@ int main(int argc, char * argv[])
     string myString;
     string Filename;
     map <char,string>Huffcode;
-    map<char,double> mpp;
+    map<char,int> mpp;
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
@@ -139,7 +139,7 @@ int main(int argc, char * argv[])
         ParallelFor pfr(w);
         
         int p=0;
-        vector<map<char,double>> listmps(w);
+        vector<map<char,int>> listmps(w);
         pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
           
             
@@ -147,7 +147,7 @@ int main(int argc, char * argv[])
                 
             
         });
-        map<char,double>::iterator it;
+        map<char,int>::iterator it;
         for(auto a: listmps)
         {
             it=a.begin();

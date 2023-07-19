@@ -10,11 +10,11 @@
 #include <bitset>
 #include "utimer.hpp"
 using namespace std;
-typedef pair<char,double> pai;
+typedef pair<char,int> pai;
 struct nodeTree
 {
     char a;
-    double freq;
+    int freq;
     nodeTree *left, *right;
 };
 
@@ -29,7 +29,7 @@ public:
     }    
 };
 //Aggiunto commento
-struct nodeTree* Newn(char data,double freq)
+struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
     temp->left = temp->right=nullptr;
@@ -39,13 +39,13 @@ struct nodeTree* Newn(char data,double freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,double> mpp)
+struct nodeTree* BuildHuffman(map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, double>::iterator it = mpp.begin();
+    map<char, int>::iterator it = mpp.begin();
     while (it != mpp.end())
     {
         pq.push(Newn(it->first,it->second));
@@ -92,7 +92,7 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 }
 int main(int argc,char* argv[])
 {
-    map<char,double> mpp;
+    map<char,int> mpp;
     ifstream myfile;
     string myString;
     string Filename;
@@ -131,13 +131,10 @@ int main(int argc,char* argv[])
         {         
             mpp[c]=mpp[c]+1.0;
         }
-       
-    
         
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
-        
         result=" ";
         for(char&c : myString)
         { 

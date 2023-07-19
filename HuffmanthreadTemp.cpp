@@ -14,7 +14,7 @@
 #include "utimer.hpp"
 
 using namespace std;
-typedef pair<char,double> pai;
+typedef pair<char,int> pai;
 mutex Lockmp;
 string myString;
 int delta,len;
@@ -22,7 +22,7 @@ int w;
 struct nodeTree
 {
     char a;
-    double freq;
+    int freq;
     nodeTree *left, *right;
 };
 
@@ -37,7 +37,7 @@ public:
     }    
 };
 //Aggiunto commento
-struct nodeTree* Newn(char data,double freq)
+struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
     temp->left = temp->right=nullptr;
@@ -47,13 +47,13 @@ struct nodeTree* Newn(char data,double freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,double> mpp)
+struct nodeTree* BuildHuffman(map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, double>::iterator it = mpp.begin();
+    map<char, int>::iterator it = mpp.begin();
     while (it != mpp.end())
     {
         pq.push(Newn(it->first,it->second));
@@ -90,7 +90,7 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 }
 
 //function for compute the frequency in parallel
-void BodyParallel(int p,  vector<map<char,double>> &listmps)
+void BodyParallel(int p,  vector<map<char,int>> &listmps)
 {   
     int first,last;
     first=delta*p;
@@ -105,10 +105,10 @@ void BodyParallel(int p,  vector<map<char,double>> &listmps)
        listmps[p][myString[i]]++;
     }
 }
-void ComputeFrequency(map<char,double> &mpp)
+void ComputeFrequency(map<char,int> &mpp)
 {
     vector<thread*> Threads; //vector of thread
-    vector<map<char,double>> listmps(w);
+    vector<map<char,int>> listmps(w);
     len=myString.size();
     delta=len/w;
     for(int i=0;i<w;i++)
@@ -119,7 +119,7 @@ void ComputeFrequency(map<char,double> &mpp)
     {
         t->join();
     }
-    map<char,double>::iterator it;
+    map<char,int>::iterator it;
     
     for(auto a: listmps)
     {
@@ -179,7 +179,7 @@ int main(int argc, char * argv[])
     
     ifstream myfile;
     string temp; //size of the string
-    map<char,double> mpp;
+    map<char,int> mpp;
     string Filename;
     map <char,string>Huffcode;
     string result;

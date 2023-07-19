@@ -11,7 +11,7 @@
 using namespace std;
 using namespace ff;
 //pipeline farm
-typedef pair<char,double> pai;
+typedef pair<char,int> pai;
 
 
 int delta,len;
@@ -20,7 +20,7 @@ int w;
 struct nodeTree
 {
     char a;
-    double freq;
+    int freq;
     nodeTree *left, *right;
 };
 
@@ -35,7 +35,7 @@ public:
     }    
 };
 //Aggiunto commento
-struct nodeTree* Newn(char data,double freq)
+struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
     temp->left = temp->right=nullptr;
@@ -152,27 +152,24 @@ int main(int argc, char * argv[])
         saveEncode(Root,"",Huffcode);
 
         ParallelFor pfr2(w);
-        map<int,string> maps;
-        pfr2.parallel_for_thid(0,myString.size(),1,0,[&maps,&Huffcode,&myString](const long idx,const int thid){
-            maps[thid]=maps[thid]+ Huffcode[myString[idx]];
+        vector<string> Codes(w);
+        pfr2.parallel_for_thid(0,myString.size(),1,0,[&Codes,&Huffcode,&myString](const long idx,const int thid){
+            Codes[thid]=Codes[thid]+ Huffcode[myString[idx]];
            
             
         });
-
-        map<int,string>::iterator it2 = maps.begin();
-        while (it2 != maps.end())
+        for( string s: Codes)
         {
-            //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
-            result= result+it2->second;
-            ++it2;
+            result=result + s;
         }
+       
     };
 
-    cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
-    cout << result;
-    //cout  << usec << "," << w << endl;    
+    //cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
+    //cout << result;
+    cout  << usec << "," << w << endl;    
 
-    /* for(char a: result)
+    for(char a: result)
     {
         
        if(bits==8)
@@ -193,8 +190,7 @@ int main(int argc, char * argv[])
         bits-=8;
          out.put(bufs >>bits);
     }
-    //cout << result << endl;*/
-   
+       
      
        
 }
