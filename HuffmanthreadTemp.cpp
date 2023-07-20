@@ -19,6 +19,8 @@ mutex Lockmp;
 string myString;
 int delta,len;
 int w;
+long usecoverh1;
+long usecoverh2;
 struct nodeTree
 {
     char a;
@@ -121,20 +123,22 @@ void ComputeFrequency(map<char,int> &mpp)
     }
     map<char,int>::iterator it;
     
-    for(auto a: listmps)
     {
-        it=a.begin();
-        while (it != a.end())
+           utimer t0("parallel computation",&usecoverh1);
+        for(auto a: listmps)
         {
-            mpp[it->first]=mpp[it->first]+it->second;
-            ++it;
+            it=a.begin();
+            while (it != a.end())
+            {
+                mpp[it->first]=mpp[it->first]+it->second;
+                ++it;
+            }
         }
     }
-
 }
 
 // Functions for parallel transform the string in binary values 
-void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode)
+void paralEncode(int p, vector<string>  &cds,map <char,string>Huffcode)
 {   
      
     int first,last;
@@ -146,31 +150,35 @@ void paralEncode(int p, map<pair<int,int>,string> &mps,map <char,string>Huffcode
     //cout << "first: " << first << " last: " << last << endl;
     for(int i=first;i<last;i++)
     {
-        mps[{first,last}]=mps[{first,last}]+ Huffcode[myString[i]];
+        cds[p]=cds[p]+ Huffcode[myString[i]];
     }
 }
 
 string Encode(map <char,string>Huffcode)
 {
     vector<thread*> Threads;
-    map<pair<int,int>,string> maps;
+    vector<string> Codes (w);
     string result;
     //cout << "non ci entro "  << w << endl;
     for(int i=0;i<w;i++)
     { 
-        Threads.push_back(new thread(paralEncode,i, ref(maps),Huffcode));
+        Threads.push_back(new thread(paralEncode,i, ref(Codes),Huffcode));
     }
     for(auto t: Threads)
     {
         t->join();
     }
-    map<pair<int,int>,string>::iterator it = maps.begin();
-    while (it != maps.end())
+   
+    
     {
-        //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
-        result= result+it->second;
-        ++it;
+        utimer t0("parallel computation",&usecoverh2);
+        for( string s: Codes)
+        {
+            result=result + s;
+        }
+    
     }
+
     return result;
 }  
 
@@ -204,8 +212,14 @@ int main(int argc, char * argv[])
     
     ofstream out("textOut.bin",ios::out | ios::binary);
     stringstream buf;
-    buf << t.rdbuf();
-    myString=buf.str();
+    long usecRead;
+    {
+        utimer t0("parallel computation",&usecRead);
+        buf << t.rdbuf();
+        myString=buf.str();
+    }
+    cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
+    
     unsigned bufs=0, bits=0;
     long freq;
     long buildtemp;
@@ -224,32 +238,39 @@ int main(int argc, char * argv[])
         utimer t0("parallel computation",&encode); 
         result=Encode(Huffcode);
     }
-    cout << "End (spent for Frequency " << freq << " usecs" << endl;
-    cout << "End (spent for build and traverse " << buildtemp << " usecs" << endl;
-    cout << "End (spent  encode " << encode << " usecs" << endl;    
+    cout << "End spent for  Overhead in Frequency " << usecoverh1 << " usecs" << endl;
+    cout << "End spent for  Overhead in encoding " << usecoverh2 << " usecs" << endl;
+    cout << "End spent for Frequency " << freq << " usecs" << endl;
+    cout << "End spent for build and traverse " << buildtemp << " usecs" << endl;
+    cout << "End spent  encode " << encode << " usecs" << endl;    
     //cout<< "Result of Encoding is: " << result << endl;
     // write in the file
-    for(char a: result)
+    long usecWrite;
     {
-        
-       if(bits==8)
+        utimer t0("parallel computation",&usecWrite);
+        for(char a: result)
         {
-           
-            out.put(bufs);      
-            bufs=0;
-            bits=0;
+            
+        if(bits==8)
+            {
+            
+                out.put(bufs);      
+                bufs=0;
+                bits=0;
+            }
+            else
+            {
+                bufs=(bufs<<1) | (atoi(&a) & 1);
+                bits++;
+            }
         }
-        else
+        if(bits>=8)
         {
-            bufs=(bufs<<1) | (atoi(&a) & 1);
-            bits++;
+            bits-=8;
+            out.put(bufs >>bits);
         }
     }
-    if(bits>=8)
-    {
-        bits-=8;
-        out.put(bufs >>bits);
-    }
+    cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
      
        
 }

@@ -30,10 +30,7 @@ class Compare {
 public:
     bool operator()(nodeTree * below, nodeTree * above)
     {
-        
         return below->freq>above->freq;
-        
-        
     }    
 };
 //Aggiunto commento
@@ -144,7 +141,8 @@ void paralEncode(int p,vector<string>  &cds,map <char,string>Huffcode)
         last=len;
     else
         last=(p+1)*delta;
-    //cout << "first: " << first << " last: " << last << endl;
+    //cout << "first: " << first << " last: " << last <<  " size of string " << myString.size() << endl;
+    
     for(int i=first;i<last;i++)
     {
         cds[p]=cds[p]+ Huffcode[myString[i]];
@@ -160,23 +158,20 @@ string Encode(map <char,string>Huffcode)
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(paralEncode,i, ref(Codes),Huffcode));
+       
     }
     for(auto t: Threads)
     {
         t->join();
     }
    
-
-    for( string s: Codes)
-    {
-        result=result + s;
-    }
-    /*while (it != maps.end())
-    {
-        //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
-        result= result+it->second;
-        ++it;
-    }*/
+    
+        for( string s: Codes)
+        {
+            result=result + s;
+        }
+    
+    
     return result;
 }  
 
@@ -225,6 +220,7 @@ int main(int argc, char * argv[])
     }
     //cout << "End (spent " << usecs1 << " usecs using " << w << " threads)"  << endl;
     cout  << usecs1 << "," << w << endl;    
+    //cout << result << endl;
     
     // write in the file
     for(char a: result)

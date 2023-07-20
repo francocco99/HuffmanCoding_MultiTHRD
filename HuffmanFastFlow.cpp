@@ -7,6 +7,7 @@
 #include <ff/ff.hpp>
 
 #include <ff/parallel_for.hpp>
+
 #include "utimer.hpp"
 using namespace std;
 using namespace ff;
@@ -16,6 +17,7 @@ typedef pair<char,int> pai;
 
 int delta,len;
 int w;
+
 
 struct nodeTree
 {
@@ -87,6 +89,48 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
     saveEncode(node->left,str+"0",Huffcode);
     saveEncode(node->right,str+"1",Huffcode);
 }
+string Encode(map <char,string>Huffcode,string myString)
+{
+    string result="";
+    /*ParallelFor pfr2(w);
+        vector<string> Codes(w);
+        pfr2.parallel_for_thid(0,myString.size(),1,0,[&Codes,&Huffcode,&myString](const long idx,const int thid){
+            Codes[thid]=Codes[thid]+ Huffcode[myString[idx]];
+           
+            
+        });
+        for( string s: Codes)
+        {
+            result=result + s;
+        }*/
+    ParallelForReduce<string> pfr2(w);
+    pfr2.parallel_reduce(result,"",0,myString.size(),1,0,[&](const long i, string &myres){
+    //cout <<"A[i]: "<<A[i] <<endl;
+        myres=myres+Huffcode[myString[i]];
+    },
+    [](string &s,const string e){s+=e;}
+    );
+    return result;
+    
+}
+void ComputeFrequency(map<char,int> &mpp,string myString)
+{
+    ParallelFor pfr(w);
+    vector<map<char,int>> listmps(w);
+    pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
+        listmps[thid][myString[idx]]++;
+    });
+    map<char,int>::iterator it;
+        for(auto a: listmps)
+        {
+            it=a.begin();
+            while (it != a.end())
+            {
+                mpp[it->first]=mpp[it->first]+it->second;
+                ++it;
+            }
+        }
+}
 
 //function for compute the frequency in parallel
 
@@ -97,11 +141,12 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 
 int main(int argc, char * argv[])
 {
-    string myString;
+   
     ifstream myfile;
     string temp; //size of the string
-    string result;
+    string result="";
     string Filename;
+    string myString;
      unsigned bufs=0, bits=0;
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
@@ -128,45 +173,17 @@ int main(int argc, char * argv[])
     myString=buf.str();
     long usec;
     {
-       utimer t0("parallel computation",&usec);
-        ParallelFor pfr(w);
+        utimer t0("parallel computation",&usec);
         map<char,int> mpp;
-        
-        vector<map<char,int>> listmps(w);
-        pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
-            listmps[thid][myString[idx]]++;
-        });
-       map<char,int>::iterator it;
-        for(auto a: listmps)
-        {
-            it=a.begin();
-            while (it != a.end())
-            {
-                mpp[it->first]=mpp[it->first]+it->second;
-                ++it;
-            }
-        }
-       
+        ComputeFrequency(ref(mpp),myString);
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
-
-        ParallelFor pfr2(w);
-        vector<string> Codes(w);
-        pfr2.parallel_for_thid(0,myString.size(),1,0,[&Codes,&Huffcode,&myString](const long idx,const int thid){
-            Codes[thid]=Codes[thid]+ Huffcode[myString[idx]];
-           
-            
-        });
-        for( string s: Codes)
-        {
-            result=result + s;
-        }
-       
+        result=Encode(Huffcode,myString);
     };
 
     //cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
-    //cout << result;
+    //cout << result << endl;
     cout  << usec << "," << w << endl;    
 
     for(char a: result)

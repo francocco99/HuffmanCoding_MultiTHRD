@@ -166,21 +166,15 @@ int main(int argc, char * argv[])
     {
         utimer t0("parallel computation",&encode);
         ParallelFor pfr2(w);
-        map<pair<int,int>,string> maps;
-        pfr2.parallel_for_idx(0,myString.size(),1,0,[&](const long first, const long last,const int thid){
-        for(int i=first;i<last;i++)
-        {
-            maps[{first,last}]=maps[{first,last}]+ Huffcode[myString[i]];
-        }
+        vector<string> Codes(w);
+        pfr2.parallel_for_thid(0,myString.size(),1,0,[&Codes,&Huffcode,&myString](const long idx,const int thid){
+            Codes[thid]=Codes[thid]+ Huffcode[myString[idx]];
+           
             
         });
-
-        map<pair<int,int>,string>::iterator it2 = maps.begin();
-        while (it2 != maps.end())
+        for( string s: Codes)
         {
-            //std::cout << "Inizio: " << it->first.first  <<"Fine: " << it->first.second << std::endl;
-            result= result+it2->second;
-            ++it2;
+            result=result + s;
         }
     }
     cout << "End (spent for Frequency " << freq << " usecs" << endl;

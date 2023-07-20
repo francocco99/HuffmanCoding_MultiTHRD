@@ -128,6 +128,7 @@ int main(int argc, char* argv[])
     
     
     myString=buf.str();
+    len=myString.size();
   //  cout << myString << endl;
     //take the number of occurences for each char
       long  freq; 
@@ -136,25 +137,24 @@ int main(int argc, char* argv[])
       long encode;
     {
         utimer t0("parallel computation",&freq); 
-        for(char&c : myString)
+       
+        for(int i=0;i<len;i++)
         {         
-            mpp[c]=mpp[c]+1.0;
+            mpp[myString[i]]=mpp[myString[i]]+1;
         }
     }
     
     {
-        utimer t0("parallel computation",&buildtemp); 
-        map<char, double>::iterator it = mpp.begin();
-        len=myString.size();   
+        utimer t0("parallel computation",&buildtemp);  
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
     }   
     {
         utimer t0("parallel computation",&encode);
-        result=" ";
-        for(char&c : myString)
+        result="";
+        for(int i=0;i<len;i++)
         { 
-            result=result+Huffcode[c];
+            result=result+Huffcode[myString[i]];
         }
     }
     cout << "End (spent for Frequency " << freq << " usecs" << endl;

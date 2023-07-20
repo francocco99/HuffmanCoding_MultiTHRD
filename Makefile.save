@@ -1,9 +1,9 @@
-CC= g++ -std=c++11
+ CC= g++ -std=c++11
 THREAD=-lpthread
-CFLAGS= -Wall -O3  
+CFLAGS= -Wall  
 
 Huffman: Huffman1.cpp
-	$(CC) $(CFLAGS)  -o Huffman1.out Huffman1.cpp   $(THREAD)  
+	$(CC) $(CFLAGS)  -o Huffman1.out Huffman1.cpp     
 
 HuffmanMulti: Huffman2Multithreadv2.cpp
 	$(CC) $(CFLAGS) Huffman2Multithreadv2.cpp -o HuffmanMultithreadv2.out    $(THREAD) 

@@ -1,15 +1,21 @@
 #include <iostream>
 #include <string>
 #include <string.h>
+#include <functional>
 #include <vector>
 #include <queue>
 #include <fstream>
 #include <sstream>
 #include <map>
 #include <algorithm>
-#include <bitset>
+#include <execution>
+#include <thread>
+#include <mutex>
 #include "utimer.hpp"
+
 using namespace std;
+int len;
+string myString;
 typedef pair<char,int> pai;
 struct nodeTree
 {
@@ -90,16 +96,33 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
     saveEncode(node->left,str+"0",Huffcode);
     saveEncode(node->right,str+"1",Huffcode);
 }
+string Encode(map <char,string>Huffcode)
+{
+    string result;
+    for(int i=0;i<len;i++)
+    { 
+        result=result+Huffcode[myString[i]];
+    }
+    return result;
+}
+void ComputeFrequency(map<char,int> &mp)
+{
+    for(int i=0;i<len;i++)
+    {         
+        mp[myString[i]]=mp[myString[i]]+1;
+    }
+}
 int main(int argc,char* argv[])
 {
-    map<char,int> mpp;
+    
     ifstream myfile;
-    string myString;
     string Filename;
     string temp;
-    
-    vector<pai> vec;
     string result;
+    
+    
+    
+    
     
     ofstream out("textOut.bin",ios::out | ios::binary);
     stringstream buf;
@@ -122,28 +145,24 @@ int main(int argc,char* argv[])
     buf << t.rdbuf();
     
     myString=buf.str();
-  //  cout << myString << endl;
+    len=myString.size();
+    vector<string>(1);
     //take the number of occurences for each char
       long usecs; 
     {
         utimer t0("parallel computation",&usecs); 
-        for(char&c : myString)
-        {         
-            mpp[c]=mpp[c]+1.0;
-        }
-        
+        map<char,int> mpp;
+        ComputeFrequency(ref(mpp));  
         map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
-        result=" ";
-        for(char&c : myString)
-        { 
-            result=result+Huffcode[c];
-        }
+        result=Encode(Huffcode);        
+       
     }
-   // cout << "End (spent " << usecs << " usecs" << endl;
+    //cout << "End (spent " << usecs << " usecs" << endl;
     cout << usecs << ",1" << endl;
-   
+    
+    //cout << result << endl;
     unsigned bufs=0, bits=0;
     // write  the char in the files
     for(char a: result)
