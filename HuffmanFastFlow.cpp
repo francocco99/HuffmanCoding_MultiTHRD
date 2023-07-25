@@ -11,8 +11,7 @@
 #include "utimer.hpp"
 using namespace std;
 using namespace ff;
-//pipeline farm
-typedef pair<char,int> pai;
+
 
 
 int delta,len;
@@ -36,7 +35,7 @@ public:
         
     }    
 };
-//Aggiunto commento
+
 struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
@@ -47,17 +46,18 @@ struct nodeTree* Newn(char data,int freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,int> mpp)
+struct nodeTree* BuildHuffman(vector<int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, int>::iterator it = mpp.begin();
-    while (it != mpp.end())
+    int len= mpp.size();
+    for(int i=0;i< len;i++)
     {
-        pq.push(Newn(it->first,it->second));
-        ++it;
+        if(mpp[i]!=0)
+            pq.push(Newn(char(i),mpp[i]));
+       
     }
     while (pq.size()!=1)
     {
@@ -72,13 +72,9 @@ struct nodeTree* BuildHuffman(map<char,int> mpp)
 
     }
     return pq.top();
-    
-
-
-
 };
 
-void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
+void saveEncode(nodeTree* node,string str, vector <string>&Huffcode)
 {
     if(node==nullptr)
         return;
@@ -89,65 +85,104 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
     saveEncode(node->left,str+"0",Huffcode);
     saveEncode(node->right,str+"1",Huffcode);
 }
-string Encode(map <char,string>Huffcode,string myString)
+
+string Encode(vector<string>Huffcode,string myString)
 {
+    /*ParallelFor pf(w);
+    vector<string> maps(w); 
+    string result;
+     pf.parallel_for_idx(0,myString.size(),1,0,[&Huffcode,&myString,&maps](const long first,const long last,const int thid){
+        if (first == last)
+                return;
+            string temp_buffer;
+            for (long i =first; i < last; i++)
+                temp_buffer += Huffcode[myString[i]];
+
+            maps[thid] = temp_buffer;
+    });  
+    for (auto s : maps)
+    {
+        result += s;
+    };
+    return result;*/
     string result="";
-    /*ParallelFor pfr2(w);
-        vector<string> Codes(w);
-        pfr2.parallel_for_thid(0,myString.size(),1,0,[&Codes,&Huffcode,&myString](const long idx,const int thid){
-            Codes[thid]=Codes[thid]+ Huffcode[myString[idx]];
-           
-            
-        });
-        for( string s: Codes)
-        {
-            result=result + s;
-        }*/
     ParallelForReduce<string> pfr2(w);
     pfr2.parallel_reduce(result,"",0,myString.size(),1,0,[&](const long i, string &myres){
     //cout <<"A[i]: "<<A[i] <<endl;
-        myres=myres+Huffcode[myString[i]];
+        myres+=Huffcode[myString[i]];
     },
     [](string &s,const string e){s+=e;}
     );
     return result;
     
 }
-void ComputeFrequency(map<char,int> &mpp,string myString)
+void ComputeFrequency(vector<int> &mpp,string myString)
 {
     ParallelFor pfr(w);
-    vector<map<char,int>> listmps(w);
-    pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const long idx,const int thid){
-        listmps[thid][myString[idx]]++;
-    });
-    map<char,int>::iterator it;
-        for(auto a: listmps)
-        {
-            it=a.begin();
-            while (it != a.end())
+    vector<int> listmps[w];
+    
+    
+    pfr.parallel_for_idx(0,myString.size(),1,0,[&listmps,&myString](const long first,const long last,const int thid){
+        if (first == last)
+                return;
+
+            listmps[thid] = vector<int>(256, 0);
+
+            for (long i = first; i < last; ++i)
             {
-                mpp[it->first]=mpp[it->first]+it->second;
-                ++it;
+                listmps[thid][myString[i]]++;
             }
+    });
+    for (int i=0; i<w;i++)
+    {
+        for (int j = 0;j <256;j++)
+        {
+            mpp[j] += listmps[i][j];
         }
+    }
 }
 
 //function for compute the frequency in parallel
 
 
 // Functions for parallel transform the string in binary values 
-
+void WriteFile(string result)
+{
+    ofstream out("textOut.bin",ios::out | ios::binary);
+    unsigned bufs=0, bits=0;
+    for(char a: result)
+    {
+        
+       if(bits==8)
+        {
+            out.put(bufs);      
+            bufs=atoi(&a);
+            bits=1;
+        }
+        else
+        {   
+            bufs=(bufs<<1) | (atoi(&a)) ; 
+            bits++;
+        }
+    }
+    if(bits==8 || bits <8)
+    {
+        out.put(bufs); 
+    } 
+}
 
 
 int main(int argc, char * argv[])
 {
    
     ifstream myfile;
-    string temp; //size of the string
+    string temp; 
     string result="";
     string Filename;
     string myString;
-     unsigned bufs=0, bits=0;
+    
+    vector<int> mpp(256,0);
+    vector <string>Huffcode(256,"");
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
@@ -174,39 +209,14 @@ int main(int argc, char * argv[])
     long usec;
     {
         utimer t0("parallel computation",&usec);
-        map<char,int> mpp;
         ComputeFrequency(ref(mpp),myString);
-        map <char,string>Huffcode;
         nodeTree* Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
         result=Encode(Huffcode,myString);
     };
 
-    //cout << "End (spent " << usec << " usecs using " << w << " threads)"  << endl; 
-    //cout << result << endl;
     cout  << usec << "," << w << endl;    
-
-    for(char a: result)
-    {
-        
-       if(bits==8)
-        {
-           
-            out.put(bufs);      
-            bufs=0;
-            bits=0;
-        }
-        else
-        {
-            bufs=(bufs<<1) | (atoi(&a) & 1);
-            bits++;
-        }
-    }
-    if(bits>=8)
-    {
-        bits-=8;
-         out.put(bufs >>bits);
-    }
+    WriteFile(result);
        
      
        

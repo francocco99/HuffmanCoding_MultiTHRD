@@ -1,18 +1,18 @@
-CC= g++ -std=c++11
+CC= g++ -std=c++2a
 THREAD=-lpthread
 CFLAGS= -Wall -O3  
 
-Huffman: Huffman1.cpp
-	$(CC) $(CFLAGS)  -o Huffman1.out Huffman1.cpp   $(THREAD)  
+Huffman: HuffmanSeq.cpp
+	$(CC) $(CFLAGS)  -o HuffmanSeq.out HuffmanSeq.cpp   $(THREAD)  
 
-HuffmanMulti: Huffman2Multithreadv2.cpp
-	$(CC) $(CFLAGS) Huffman2Multithreadv2.cpp -o HuffmanMultithreadv2.out    $(THREAD) 
+HuffmanThread: Huffmanthread.cpp
+	$(CC) $(CFLAGS) Huffmanthread.cpp -o Huffmanthread.out    $(THREAD) 
 
 HuffmanFast: HuffmanFastFlow.cpp
 	$(CC) $(CFLAGS) HuffmanFastFlow.cpp -o HuffmanFastFlow.out    $(THREAD)
 
-HuffmanTemp: Huffman1diffTemp.cpp
-	$(CC) $(CFLAGS) Huffman1diffTemp.cpp -o Huffman1diffTemp.out    $(THREAD)
+HuffmanSeqTemp: HuffmanSeqTemp.cpp
+	$(CC) $(CFLAGS) HuffmanSeqTemp.cpp -o HuffmanSeqTemp.out    $(THREAD)
 
 HuffmanThreadTemp: HuffmanthreadTemp.cpp
 	$(CC) $(CFLAGS) HuffmanthreadTemp.cpp -o HuffmanthreadTemp.out    $(THREAD)
@@ -21,7 +21,7 @@ HuffmanFastTemp: HuffmanFastTemp.cpp
 	$(CC) $(CFLAGS) HuffmanFastTemp.cpp -o HuffmanFastTemp.out    $(THREAD)	
 
 
-all: Huffman HuffmanMulti HuffmanFast
+all: Huffman HuffmanThread HuffmanFast HuffmanSeqTemp HuffmanThreadTemp HuffmanFastTemp
 
 script: Huffman HuffmanMulti HuffmanFast
 	./script.sh

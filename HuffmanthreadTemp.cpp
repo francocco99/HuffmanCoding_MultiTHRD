@@ -32,13 +32,10 @@ class Compare {
 public:
     bool operator()(nodeTree * below, nodeTree * above)
     {
-        
         return below->freq>above->freq;
-        
-        
     }    
 };
-//Aggiunto commento
+
 struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
@@ -49,17 +46,18 @@ struct nodeTree* Newn(char data,int freq)
     return temp;    
 }
 
-struct nodeTree* BuildHuffman(map<char,int> mpp)
+struct nodeTree* BuildHuffman(vector<int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    map<char, int>::iterator it = mpp.begin();
-    while (it != mpp.end())
+    int len=mpp.size();
+   for(int i=0;i< len;i++)
     {
-        pq.push(Newn(it->first,it->second));
-        ++it;
+        if(mpp[i]!=0)
+            pq.push(Newn(char(i),mpp[i]));
+       
     }
     while (pq.size()!=1)
     {
@@ -79,7 +77,7 @@ struct nodeTree* BuildHuffman(map<char,int> mpp)
 
 
 };
-void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
+void saveEncode(nodeTree* node,string str,  vector <string>&Huffcode)
 {
     if(node==nullptr)
         return;
@@ -92,7 +90,7 @@ void saveEncode(nodeTree* node,string str, map <char,string>&Huffcode)
 }
 
 //function for compute the frequency in parallel
-void BodyParallel(int p,  vector<map<char,int>> &listmps)
+void BodyParallel(int p,  vector<vector<int>> &listmps)
 {   
     int first,last;
     first=delta*p;
@@ -101,16 +99,17 @@ void BodyParallel(int p,  vector<map<char,int>> &listmps)
     else
         last=(p+1)*delta;
    // cout << "first: " << first << " last: " << last << endl;
+   listmps[p]=vector<int>(256,0);
     for(int i=first;i<last;i++)
     {
        
        listmps[p][myString[i]]++;
     }
 }
-void ComputeFrequency(map<char,int> &mpp)
+void ComputeFrequency(vector<int> &mpp)
 {
     vector<thread*> Threads; //vector of thread
-    vector<map<char,int>> listmps(w);
+    vector<vector<int>> listmps(w);
     len=myString.size();
     delta=len/w;
     for(int i=0;i<w;i++)
@@ -121,40 +120,41 @@ void ComputeFrequency(map<char,int> &mpp)
     {
         t->join();
     }
-    map<char,int>::iterator it;
-    
+   
     {
-           utimer t0("parallel computation",&usecoverh1);
-        for(auto a: listmps)
+        utimer to("Overhead computation",&usecoverh1);
+        for (int i=0; i<w;i++)
         {
-            it=a.begin();
-            while (it != a.end())
+            for (int j = 0; j < 256; j++)
             {
-                mpp[it->first]=mpp[it->first]+it->second;
-                ++it;
+                mpp[j] += listmps[i][j];
             }
         }
     }
+     
+
 }
 
 // Functions for parallel transform the string in binary values 
-void paralEncode(int p, vector<string>  &cds,map <char,string>Huffcode)
+void paralEncode(int p, vector<string>  &cds,vector <string>Huffcode)
 {   
      
     int first,last;
+    string output;
     first=delta*p;
     if(p==w-1)
         last=len;
     else
         last=(p+1)*delta;
-    //cout << "first: " << first << " last: " << last << endl;
+
     for(int i=first;i<last;i++)
     {
-        cds[p]=cds[p]+ Huffcode[myString[i]];
+        output+= Huffcode[myString[i]];
     }
+     cds[p] = output;
 }
 
-string Encode(map <char,string>Huffcode)
+string Encode(vector <string>Huffcode)
 {
     vector<thread*> Threads;
     vector<string> Codes (w);
@@ -174,22 +174,45 @@ string Encode(map <char,string>Huffcode)
         utimer t0("parallel computation",&usecoverh2);
         for( string s: Codes)
         {
-            result=result + s;
+            result+= s;
         }
     
     }
 
     return result;
 }  
-
+void WriteFile(string result)
+{
+    ofstream out("textOut.bin",ios::out | ios::binary);
+    unsigned bufs=0, bits=0;
+    for(char a: result)
+    {
+        
+       if(bits==8)
+        {
+            out.put(bufs);      
+            bufs=atoi(&a);
+            bits=1;
+        }
+        else
+        {   
+            bufs=(bufs<<1) | (atoi(&a)) ; 
+            bits++;
+        }
+    }
+    if(bits==8 || bits <8)
+    {
+        out.put(bufs); 
+    } 
+}
 int main(int argc, char * argv[])
 {
     
     ifstream myfile;
     string temp; //size of the string
-    map<char,int> mpp;
     string Filename;
-    map <char,string>Huffcode;
+    vector<int> mpp(256,0);
+    vector <string>Huffcode(256,"");
     string result;
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
@@ -220,7 +243,7 @@ int main(int argc, char * argv[])
     }
     cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
     
-    unsigned bufs=0, bits=0;
+   
     long freq;
     long buildtemp;
     long encode;
@@ -248,27 +271,7 @@ int main(int argc, char * argv[])
     long usecWrite;
     {
         utimer t0("parallel computation",&usecWrite);
-        for(char a: result)
-        {
-            
-        if(bits==8)
-            {
-            
-                out.put(bufs);      
-                bufs=0;
-                bits=0;
-            }
-            else
-            {
-                bufs=(bufs<<1) | (atoi(&a) & 1);
-                bits++;
-            }
-        }
-        if(bits>=8)
-        {
-            bits-=8;
-            out.put(bufs >>bits);
-        }
+        WriteFile(result);
     }
     cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
      
