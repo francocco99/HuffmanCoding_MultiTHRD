@@ -2,7 +2,7 @@
 #include <string>
 #include <string.h>
 #include <functional>
-#include <vector>
+
 #include <queue>
 #include <fstream>
 #include <sstream>
@@ -12,76 +12,18 @@
 #include <thread>
 #include <mutex>
 #include "utimer.hpp"
+#include "BuildHuffman.hpp"
 using namespace std;
 int len;
 string myString;
 
-struct nodeTree
-{
-    char a;
-    double freq;
-    nodeTree *left, *right;
-};
-
-class Compare {
-public:
-    bool operator()(nodeTree * below, nodeTree * above)
-    {
-        
-        return below->freq>above->freq;
-        
-        
-    }    
-};
-
-struct nodeTree* Newn(char data,double freq)
-{
-    struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
-    temp->left = temp->right=nullptr;
-    temp->a = data;
-    temp->freq = freq;
- 
-    return temp;    
-}
-
-struct nodeTree* BuildHuffman(vector<int> mpp)
-{
-    nodeTree * left;
-    nodeTree * right;
-    nodeTree * center;
-    priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-   
-    for(int i=0;i<256;i++)
-    {
-        if(mpp[i]!=0)
-            pq.push(Newn(char(i),mpp[i]));
-       
-    }
-    while (pq.size()!=1)
-    {
-        left=pq.top();pq.pop();
-        right=pq.top();pq.pop();
-
-        //creo il nuovo nodo interno
-        center=Newn('#',left->freq+right->freq);
-        center->left=left;
-        center->right=right;
-        pq.push(center);
-
-    }
-    return pq.top();
-    
 
 
-
-};
-
-
+//traverse the tree for create the encoding of each char
 void saveEncode(nodeTree* node,string str,vector <string>&Huffcode)
 {
     if(node==nullptr)
         return;
-    // if there is a leaf i save the encoding of the char
     if (!node->left && !node->right) {
 		Huffcode[node->a] = str;
 	}
@@ -89,6 +31,7 @@ void saveEncode(nodeTree* node,string str,vector <string>&Huffcode)
     saveEncode(node->right,str+"1",Huffcode);
 }
 
+//encode the tesxt using the right code for each letter
 string Encode(vector <string>Huffcode)
 {
     string result;
@@ -99,6 +42,7 @@ string Encode(vector <string>Huffcode)
     return result;
 }
 
+//compute frequency of the letter in the text
 void ComputeFrequency(vector<int> &mp)
 {
     for(int i=0;i<len;i++)
@@ -106,34 +50,9 @@ void ComputeFrequency(vector<int> &mp)
         mp[myString[i]]++;
     }
 }
-void WriteFile(string result)
-{
-    ofstream out("textOut.bin",ios::out | ios::binary);
-    unsigned bufs=0, bits=0;
-    for(char a: result)
-    {
-        
-       if(bits==8)
-        {
-            out.put(bufs);      
-            bufs=atoi(&a);
-            bits=1;
-        }
-        else
-        {   
-            bufs=(bufs<<1) | (atoi(&a)) ; 
-            bits++;
-        }
-    }
-    if(bits==8 || bits <8)
-    {
-        out.put(bufs); 
-    } 
-}
 
 int main(int argc, char* argv[])
 {
-    //map<char,int> mpp;
     vector<int> mpp(256,0);
     vector <string>Huffcode(256,"");
     ifstream myfile;
@@ -165,7 +84,8 @@ int main(int argc, char* argv[])
         buf << t.rdbuf();
         myString=buf.str();
     }
-        cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
+        //cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
+    cout << "r," << usecRead  << endl;
     len=myString.size();
  
       long  freq; 
@@ -186,16 +106,26 @@ int main(int argc, char* argv[])
         result=Encode(Huffcode);
         
     }
-    cout << "End spent for Frequency " << freq << " usecs" << endl;
+    /*cout << "End spent for Frequency " << freq << " usecs" << endl;
     cout << "End spent for build and traverse " << buildtemp << " usecs" << endl;
-    cout << "End spent  encode " << encode << " usecs" << endl;
+    cout << "End spent  encode " << encode << " usecs" << endl;*/
+
+
+    cout << "F," << freq  << endl;
+    cout << "b," << buildtemp <<  endl;
+    cout << "e," << encode  << endl;
+
    
+
+
+
    
     long usecWrite;
     {
         utimer t0("parallel computation",&usecWrite);
         WriteFile(result);
     }
-    cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
+    cout << "w," << usecWrite  << endl;
+   // cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
        
 }
