@@ -1,6 +1,0 @@
-Freq,4861 usecs
-b,48 usecs
-e,95949 usecs
-Freq,3931 usecs
-b,32 usecs
-e,63234 usecs

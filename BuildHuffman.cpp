@@ -3,19 +3,19 @@
 #include <fstream>
 #include <sstream>
 
-struct nodeTree* BuildHuffman(vector<int> mpp)
+
+struct nodeTree* BuildHuffman(unordered_map<char,int> mpp)
 {
     nodeTree * left;
     nodeTree * right;
     nodeTree * center;
     priority_queue<nodeTree *,vector<nodeTree *>,Compare> pq;
-    int len=mpp.size();
-    for(int i=0;i< len;i++)
+   
+    for(auto a:mpp)
     {
-        if(mpp[i]!=0)
-            pq.push(Newn(char(i),mpp[i]));
-       
+      pq.push(Newn(a.first,a.second));  
     }
+  
     while (pq.size()!=1)
     {
         left=pq.top();pq.pop();
@@ -66,4 +66,15 @@ void WriteFile(string result)
     {
         out.put(bufs); 
     } 
+}
+void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode)
+{
+    if(node==nullptr)
+        return;
+    // if there is a leaf i save the encoding of the char
+    if (!node->left && !node->right) {
+		Huffcode[node->a] = str;
+	}
+    saveEncode(node->left,str+"0",Huffcode);
+    saveEncode(node->right,str+"1",Huffcode);
 }

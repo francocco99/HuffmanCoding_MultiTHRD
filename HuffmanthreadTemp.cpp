@@ -14,8 +14,7 @@
 #include "utimer.hpp"
 #include "BuildHuffman.hpp"
 using namespace std;
-typedef pair<char,int> pai;
-mutex Lockmp;
+
 string myString;
 int delta,len;
 int w;
@@ -25,6 +24,7 @@ long usecoverh2;
 
 
 
+//traverse the tree for create the encoding of each char
 
 void saveEncode(nodeTree* node,string str,  vector <string>&Huffcode)
 {
@@ -47,14 +47,15 @@ void BodyParallel(int p,  vector<vector<int>> &listmps)
         last=len;
     else
         last=(p+1)*delta;
-   // cout << "first: " << first << " last: " << last << endl;
-   listmps[p]=vector<int>(256,0);
+    listmps[p]=vector<int>(256,0);
     for(int i=first;i<last;i++)
     {
        
        listmps[p][myString[i]]++;
     }
 }
+
+//compute frequency of the letter in the text
 void ComputeFrequency(vector<int> &mpp)
 {
     vector<thread*> Threads; //vector of thread
@@ -108,7 +109,7 @@ string Encode(vector <string>Huffcode)
     vector<thread*> Threads;
     vector<string> Codes (w);
     string result;
-    //cout << "non ci entro "  << w << endl;
+    
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(paralEncode,i, ref(Codes),Huffcode));
@@ -117,8 +118,6 @@ string Encode(vector <string>Huffcode)
     {
         t->join();
     }
-   
-    
     {
         utimer t0("parallel computation",&usecoverh2);
         for( string s: Codes)
@@ -167,7 +166,7 @@ int main(int argc, char * argv[])
         buf << t.rdbuf();
         myString=buf.str();
     }
-    cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
+    //cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
     
    
     long freq;
@@ -187,19 +186,23 @@ int main(int argc, char * argv[])
         utimer t0("parallel computation",&encode); 
         result=Encode(Huffcode);
     }
-    cout << "End spent for  Overhead in Frequency " << usecoverh1 << " usecs" << endl;
+    /*cout << "End spent for  Overhead in Frequency " << usecoverh1 << " usecs" << endl;
     cout << "End spent for  Overhead in encoding " << usecoverh2 << " usecs" << endl;
     cout << "End spent for Frequency " << freq << " usecs" << endl;
     cout << "End spent for build and traverse " << buildtemp << " usecs" << endl;
-    cout << "End spent  encode " << encode << " usecs" << endl;    
-    //cout<< "Result of Encoding is: " << result << endl;
+    cout << "End spent  encode " << encode << " usecs" << endl;    */
+    
+    cout << "F," << freq  << endl;
+    cout << "b," << buildtemp <<  endl;
+    cout << "e," << encode  << endl;
+
     // write in the file
     long usecWrite;
     {
         utimer t0("parallel computation",&usecWrite);
         WriteFile(result);
     }
-    cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
+    //cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
      
        
 }

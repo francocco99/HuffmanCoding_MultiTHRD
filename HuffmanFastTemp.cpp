@@ -10,15 +10,15 @@
 #include "BuildHuffman.hpp"
 using namespace std;
 using namespace ff;
-//pipeline farm
+
 
 
 
 int delta,len;
 int w;
 
-
-void saveEncode(nodeTree* node,string str, vector <string>&Huffcode)
+//traverse the tree for create the encoding of each char
+void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode)
 {
     if(node==nullptr)
         return;
@@ -30,61 +30,54 @@ void saveEncode(nodeTree* node,string str, vector <string>&Huffcode)
     saveEncode(node->right,str+"1",Huffcode);
 }
 
-string Encode(vector<string>Huffcode,string myString)
+
+//encode the tesxt using the right code for each letter
+string Encode(unordered_map<char,string>Huffcode,string myString)
 {
-   ParallelFor pf(w);
-    vector<string> maps(w); // vector of encoded chunks of the input file
+  ParallelFor pf(w);
+    vector<string> Codes(w,""); // vector of encoded chunks of the input file
     string result;
-     pf.parallel_for_idx(0,myString.size(),1,0,[&Huffcode,&myString,&maps](const long first,const long last,const int thid){
-        if (first == last)
-                return;
+     pf.parallel_for_idx(0,myString.size(),1,0,[&Huffcode,&myString,&Codes](const long first,const long last,const int thid){
+        string buffer;
 
-            string temp_buffer;
+        for (long i =first; i < last; i++)
+            buffer += Huffcode[myString[i]];
 
-            for (long i =first; i < last; i++)
-                temp_buffer += Huffcode[myString[i]];
-
-            maps[thid] = temp_buffer;
+        Codes[thid] = buffer;
     });
-    for (auto s : maps)
+    for (auto s:Codes)
     {
-        result += s;
+        result+= s;
     };
     return result;
     
 }
-void ComputeFrequency(vector<int> &mpp,string myString)
+
+//compute frequency of the letter in the text
+void ComputeFrequency(unordered_map<char,int> &mpp,string myString)
 {
     
-    ParallelFor pfr(w);
-    vector<int> listmps[w];
+    ParallelFor pfr(w,true);
+    vector<unordered_map<char,int>> listmps(w);
     
-    
-    pfr.parallel_for_idx(0,myString.size(),1,0,[&listmps,&myString](const long first,const long last,const int thid){
-        if (first == last)
-                return;
+    pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const int idx,const int thid){
 
-            listmps[thid] = vector<int>(256, 0);
-
-            for (long i = first; i < last; ++i)
-            {
-                listmps[thid][myString[i]]++;
-            }
+        listmps[thid][myString[idx]]++;
     });
-    for (int i=0; i<w;i++)
+    long usecOver;
     {
-        for (int j= 0;j<256;j++)
+        utimer t0("parallel computation",&usecOver);
+        for (int i = 0; i < w; i++)
         {
-            mpp[j] += listmps[i][j];
+            for (auto j: listmps[i])
+            {
+                mpp[j.first] += j.second;
+            }
         }
     }
+    cout  << usecOver << " -----> OverheadTemp " << w << endl;
 }
 
-
-//function for compute the frequency in parallel
-
-
-// Functions for parallel transform the string in binary values 
 
 
 
@@ -97,8 +90,9 @@ int main(int argc, char * argv[])
     string myString;
     string Filename;
 
-    vector<int> mpp(256,0);
-    vector <string>Huffcode(256,"");
+    unordered_map<char,int> mpp;
+    unordered_map<char,string>Huffcode;
+    
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
@@ -142,9 +136,15 @@ int main(int argc, char * argv[])
         utimer t0("parallel computation",&encode);
         result=Encode(Huffcode,myString);
     }
-    cout << "End spent for Frequency " << freq << " usecs" << endl;
+
+    /*cout << "End spent for Frequency " << freq << " usecs" << endl;
     cout << "End spent for build and traverse " << buildtemp << " usecs" << endl;
-    cout << "End spent  encode " << encode << " usecs" << endl;
+    cout << "End spent  encode " << encode << " usecs" << endl;*/
+    
+    cout << "F," << freq  << endl;
+    cout << "b," << buildtemp <<  endl;
+    cout << "e," << encode  << endl;
+
 
     WriteFile(result);
   

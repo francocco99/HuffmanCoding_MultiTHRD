@@ -6,9 +6,9 @@ build=0
 freqmedia=0
 eqmedia=0
 buildmedia=0
-if [ -d "log" ]; then
-   cd log
-   file=$(ls)
+if [ -d "log4" ]; then
+   cd log4
+   file=$(ls logfast.txt)
    n=$(grep -o "F" "$file" | wc -l)
 
 
