@@ -42,10 +42,14 @@ int main(int argc,char* argv[])
     string Filename;
     string result;
     string line;
+    int mode;
+
     ofstream out("textOut.bin",ios::out | ios::binary);
+
     unordered_map<char,int> mpp; // A map for each character with its frequency
     unordered_map<char,string>Huffcode;// map for each character the bit string 
-    
+   
+    long usecRead;
 
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName" << endl; 
@@ -56,6 +60,9 @@ int main(int argc,char* argv[])
         cout << "Usage is: " << argv[0] << " fileName" << endl; 
         return 0;
     }
+
+
+    mode=(argc<2 ? 0: atoi(argv[2]));
     Filename=argv[1]; // take the name of the file
     ifstream inputFile(Filename);// open the inputfilestream
     if(inputFile.good()==false)
@@ -64,26 +71,50 @@ int main(int argc,char* argv[])
         return 0;
     }
     // take the input string
-    while (getline(inputFile, line))
     {
-        myString += line;
+        utimer t0("parallel computation",&usecRead); 
+        while (getline(inputFile, line))
+        {
+            myString += line;
+        }
     }
    
     len=myString.size();
-   
-    
-    long usecs; 
+     long usecs; 
+    if(!mode)
     {
-        utimer t0("parallel computation",&usecs); 
-        ComputeFrequency(ref(mpp));  
-        nodeTree* Root=BuildHuffman(mpp);
-        saveEncode(Root,"",Huffcode);
-        result=Encode(Huffcode);        
+        
+        {
+            utimer t0("parallel computation",&usecs); 
+            ComputeFrequency(ref(mpp));  
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            for(auto a: Huffcode)
+            {
+                cout <<" letter " <<a.first << " coding " << a.second << endl;
+            }
+            result=Encode(Huffcode);        
+        
+        };
+    
+        WriteFile(result);   // write the encoded string in a file
+    }
+    else
+    {
        
-    };
- 
-    WriteFile(result);   // write the encoded string in a file
-     
+        {
+            utimer t0("parallel computation",&usecs); 
+            ComputeFrequency(ref(mpp));  
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            for(auto a: Huffcode)
+            {
+                cout <<" letter " <<a.first << " coding " << a.second << endl;
+            }
+            result=Encode(Huffcode);        
+            WriteFile(result);   // write the encoded string in a file
+        }
+    }
     cout << usecs << ",1" << endl;
      
        

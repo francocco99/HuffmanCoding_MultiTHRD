@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-
+// function that built the Huffman tree
 struct nodeTree* BuildHuffman(unordered_map<char,int> mpp)
 {
     nodeTree * left;
@@ -30,6 +30,7 @@ struct nodeTree* BuildHuffman(unordered_map<char,int> mpp)
     }
     return pq.top();
 };
+//funtion that create new node for the huffman tree
 struct nodeTree* Newn(char data,int freq)
 {
     struct nodeTree* temp = (struct nodeTree*)malloc(sizeof(struct nodeTree));
@@ -39,12 +40,21 @@ struct nodeTree* Newn(char data,int freq)
  
     return temp;    
 }
+
 bool Compare::operator()(nodeTree* below, nodeTree * above)
 {
     return below->freq>above->freq;
 };
+//Write the encoded string in the file.
 void WriteFile(string result)
 {
+    int size = result.size();
+    int adds = size % 8;
+    if(adds!=0)
+    {
+        adds = 8 - adds;
+    }
+    result.append(adds, '0');
     ofstream out("textOut.bin",ios::out | ios::binary);
     unsigned bufs=0, bits=0;
     for(char a: result)
@@ -67,11 +77,11 @@ void WriteFile(string result)
         out.put(bufs); 
     } 
 }
+//funtion that create the map that associate at each char the encoding, traversing the tree
 void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode)
 {
     if(node==nullptr)
         return;
-    // if there is a leaf i save the encoding of the char
     if (!node->left && !node->right) {
 		Huffcode[node->a] = str;
 	}

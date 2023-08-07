@@ -143,18 +143,22 @@ string AsciiTransform(string newstring)
     vector<string> ResultAscii(w);
     string result;
     int bits;
-    if(delta % 8!= 0)
-    {
-        bits = delta % 8;
-        bits = 8 - bits;
-        delta += bits;
-    }
     int size = newstring.size();
     bits = size % 8;
-    bits = 8 - bits;
+    if(bits!=0)
+    {
+        bits = 8 - bits;
+    }
     newstring.append(bits, '0');
     len=newstring.size();
-   
+    delta=len/w;
+    bits=delta%8;
+    if(bits!=0)
+    {
+        bits=8-bits;
+        delta+=bits; 
+    }
+    cout << delta%8<<endl;
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
@@ -166,7 +170,6 @@ string AsciiTransform(string newstring)
     }
     for( string s: ResultAscii)
     {
-       
         result+= s;
     }
     return result;
@@ -178,6 +181,7 @@ int main(int argc, char * argv[])
     string Filename;
     string result;
     string line;
+    int mode;
     
     ofstream outFile("textOut.bin",ios::out | ios::binary);
     
@@ -194,6 +198,7 @@ int main(int argc, char * argv[])
         return 0;
     }
 
+    mode=(argc<4 ? 0: atoi(argv[3]));
     w=atoi(argv[2]); // take the number of workers
     Filename=argv[1];  // take the name of the file
     ifstream inputFile(Filename); // open the inputfilestream
@@ -210,21 +215,33 @@ int main(int argc, char * argv[])
     }
    
     long usecs;
+    if(!mode)
     {
-        utimer t0("parallel computation",&usecs); 
-        ComputeFrequency(ref(mpp));
-        nodeTree* Root=BuildHuffman(mpp);
-        saveEncode(Root,"",Huffcode);
-        result=Encode(Huffcode);
-       
-     };
-    string Asciiresult=AsciiTransform(result);
-    if (outFile.is_open()) 
-    {
+        {
+            utimer t0("parallel computation",&usecs); 
+            ComputeFrequency(ref(mpp));
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            result=Encode(Huffcode);
+        };
+        string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
-        outFile.close();  // Close the file
+        outFile.close(); 
     }
-    
+    else
+    {
+        {
+            utimer t0("parallel computation",&usecs); 
+            ComputeFrequency(ref(mpp));
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            result=Encode(Huffcode);
+            string Asciiresult=AsciiTransform(result);
+            outFile.write(Asciiresult.c_str(), Asciiresult.size());
+            outFile.close();
+        };
+        
+    }
     cout  << usecs << "," << w << endl; 
      
 }

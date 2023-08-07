@@ -95,22 +95,25 @@ void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
     
 
 }
+
 string AsciiTransform(string newstring)
 {
    
     int bits;
     int size = newstring.size();
     bits = size % 8;
-    bits = 8 - bits;
+    if(bits!=0)
+    {
+        bits = 8 - bits;
+    }
     newstring.append(bits, '0');
     len=newstring.size();
-    int delta=len/w;
-   
-    if(delta % 8!= 0)
+    delta=len/w;
+    bits=delta%8;
+    if(bits!=0)
     {
-        bits = delta % 8;
-        bits = 8 - bits;
-        delta += bits;
+        bits=8-bits;
+        delta+=bits; 
     }
     
     string result="";
@@ -130,11 +133,12 @@ int main(int argc, char * argv[])
     string result="";
     string Filename;
     string line;
- 
+    int mode;
+    
     ofstream outFile("textOut.bin",ios::out | ios::binary);
 
-    unordered_map<char,int> mpp;
-    unordered_map<char,string>Huffcode;
+    unordered_map<char,int> mpp;// A map for each character with its frequency
+    unordered_map<char,string>Huffcode;// map for each character the bit string 
     
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
@@ -145,9 +149,11 @@ int main(int argc, char * argv[])
         cout << "Usage is: " << argv[0] << " fileName number_workers" << endl; 
         return 0;
     }
+    
+    mode=(argc<4 ? 0: atoi(argv[3]));
     w=atoi(argv[2]);
-    Filename=argv[1]; //number of workers
-    ifstream inputFile(Filename);
+    Filename=argv[1]; // take the name of the file
+    ifstream inputFile(Filename);// open the inputfilestream
     if(inputFile.good()==false)
     {
         cout << "The file: " << argv[1] << " does not exists" << endl;  
@@ -158,22 +164,33 @@ int main(int argc, char * argv[])
         myString += line;
     }
     long usec;
+    if(!mode)
     {
-        utimer t0("parallel computation",&usec);
-        ComputeFrequency(ref(mpp),myString);
-        nodeTree* Root=BuildHuffman(mpp);
-        saveEncode(Root,"",Huffcode);
-        result=Encode(Huffcode,myString);
-        
-    
-    };   
-      
-   
-    string Asciiresult=AsciiTransform(result);
-    if (outFile.is_open()) 
-    {
+        {
+            utimer t0("parallel computation",&usec); 
+            ComputeFrequency(ref(mpp),myString);
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            result=Encode(Huffcode,myString);
+        };
+        string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
-        outFile.close();  // Close the file
+        outFile.close(); 
     }
+    else
+    {
+        {
+            utimer t0("parallel computation",&usec); 
+            ComputeFrequency(ref(mpp),myString);
+            nodeTree* Root=BuildHuffman(mpp);
+            saveEncode(Root,"",Huffcode);
+            result=Encode(Huffcode,myString);
+            string Asciiresult=AsciiTransform(result);
+            outFile.write(Asciiresult.c_str(), Asciiresult.size());
+            outFile.close();
+        };
+        
+    }  
+    
     cout  << usec << "," << w << endl; 
 }
