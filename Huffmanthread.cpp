@@ -158,7 +158,7 @@ string AsciiTransform(string newstring)
         bits=8-bits;
         delta+=bits; 
     }
-    cout << delta%8<<endl;
+    
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
@@ -208,15 +208,16 @@ int main(int argc, char * argv[])
         cout << "The file: " << argv[1] << " does not exists" << endl;  
         return 0;
     }
-    // take the input string
-    while (getline(inputFile, line))
-    {
-        myString += line;
-    }
+  
    
     long usecs;
     if(!mode)
     {
+        // take the input string
+        while (getline(inputFile, line))
+        {
+            myString += line;
+        }
         {
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));
@@ -231,6 +232,11 @@ int main(int argc, char * argv[])
     else
     {
         {
+              // take the input string
+            while (getline(inputFile, line))
+            {
+                myString += line;
+            }
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));
             nodeTree* Root=BuildHuffman(mpp);

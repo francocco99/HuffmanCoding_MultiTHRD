@@ -22,12 +22,12 @@ string Encode(unordered_map<char,string>Huffcode,string myString)
     vector<string> Codes(w,""); // vector of encoded chunks of the input file
     string result;
      pf.parallel_for_idx(0,myString.size(),1,0,[&Huffcode,&myString,&Codes](const long first,const long last,const int thid){
-        string buffer;
-
+        string temp;
         for (long i =first; i < last; i++)
-            buffer += Huffcode[myString[i]];
-
-        Codes[thid] = buffer;
+        {
+            temp+=Huffcode[myString[i]];
+        }
+        Codes[thid]=temp;
     });
     for (auto s:Codes)
     {
@@ -159,13 +159,15 @@ int main(int argc, char * argv[])
         cout << "The file: " << argv[1] << " does not exists" << endl;  
         return 0;
     }
-    while (getline(inputFile, line))
-    {
-        myString += line;
-    }
+    
     long usec;
     if(!mode)
     {
+        while (getline(inputFile, line))
+        {
+            myString += line;
+        }
+
         {
             utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
@@ -180,6 +182,10 @@ int main(int argc, char * argv[])
     else
     {
         {
+            while (getline(inputFile, line))
+            {
+                myString += line;
+            }
             utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
             nodeTree* Root=BuildHuffman(mpp);

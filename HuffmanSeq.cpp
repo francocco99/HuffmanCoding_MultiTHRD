@@ -49,7 +49,7 @@ int main(int argc,char* argv[])
     unordered_map<char,int> mpp; // A map for each character with its frequency
     unordered_map<char,string>Huffcode;// map for each character the bit string 
    
-    long usecRead;
+  
 
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
         cout << "Usage is: " << argv[0] << " fileName" << endl; 
@@ -70,21 +70,23 @@ int main(int argc,char* argv[])
         cout << "The file: " << argv[1] << " does not exists" << endl;  
         return 0;
     }
-    // take the input string
-    {
-        utimer t0("parallel computation",&usecRead); 
-        while (getline(inputFile, line))
-        {
-            myString += line;
-        }
-    }
    
-    len=myString.size();
-     long usecs; 
+   
+       
+    
+   
+    
+    long usecs; 
     if(!mode)
     {
-        
+        // take the input string
+        while (getline(inputFile, line))
         {
+            myString+=line;
+        }
+        len=myString.size();
+        {
+            
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
             nodeTree* Root=BuildHuffman(mpp);
@@ -103,6 +105,11 @@ int main(int argc,char* argv[])
     {
        
         {
+            while (getline(inputFile, line))
+            {
+                myString+=line;
+            }
+            len=myString.size();
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
             nodeTree* Root=BuildHuffman(mpp);
