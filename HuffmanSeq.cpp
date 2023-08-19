@@ -1,23 +1,20 @@
 #include <iostream>
-#include <string>
 #include <string.h>
 #include <functional>
-#include <queue>
 #include <fstream>
-#include <unordered_map>
 #include <algorithm>
 #include "utimer.hpp"
 #include "BuildHuffman.hpp"
 
 using namespace std;
 int len; // len of the string
-string myString; // string tht contain the string to process
+string myString; // string that contain the string to process
 
 // function that transform the original string in the encoded string 
 string Encode(unordered_map<char,string>Huffcode)
 {
     string result;
-    for(int i=0;i<len;i++)
+    for(size_t i=0;i<myString.length();i++)
     { 
         result+=Huffcode[myString[i]];
     }
@@ -27,22 +24,20 @@ string Encode(unordered_map<char,string>Huffcode)
 //compute frequency of the letter in the text
 void ComputeFrequency(unordered_map<char,int> &mp)
 {
-    for(int i=0;i<len;i++)
+    for(size_t i=0;i<myString.length();i++)
     {         
         mp[myString[i]]++;
     }
     
 }
 
-
-
-
 int main(int argc,char* argv[])
 {
-    string Filename;
-    string result;
-    string line;
-    int mode;
+    string Filename; // name of the file in input
+    string result;  //result of the encoding
+    string line; //used for read the file
+    
+    int mode; // 0 / 1 used to print
 
     ofstream out("textOut.bin",ios::out | ios::binary);
 
@@ -52,7 +47,7 @@ int main(int argc,char* argv[])
   
 
     if(argc == 2 && strcmp(argv[1],"-help")==0) {
-        cout << "Usage is: " << argv[0] << " fileName" << endl; 
+        cout << "Usage is: " << argv[0] << " fileName" << " mode " <<endl; 
         return(0);
     }
     if(argc==1)
@@ -62,19 +57,14 @@ int main(int argc,char* argv[])
     }
 
 
-    mode=(argc<2 ? 0: atoi(argv[2]));
+    mode=(argc<3 ? 0: atoi(argv[2]));
     Filename=argv[1]; // take the name of the file
-    ifstream inputFile(Filename);// open the inputfilestream
+    ifstream inputFile(Filename);
     if(inputFile.good()==false)
     {
         cout << "The file: " << argv[1] << " does not exists" << endl;  
         return 0;
     }
-   
-   
-       
-    
-   
     
     long usecs; 
     if(!mode)
@@ -84,45 +74,39 @@ int main(int argc,char* argv[])
         {
             myString+=line;
         }
-        len=myString.size();
-        {
-            
+        { 
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
             nodeTree* Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
-            for(auto a: Huffcode)
-            {
-                cout <<" letter " <<a.first << " coding " << a.second << endl;
-            }
             result=Encode(Huffcode);        
         
         };
-    
+        cout << "Time spend for computing the result: "<< usecs << endl;
         WriteFile(result);   // write the encoded string in a file
     }
     else
     {
-       
+        
         {
             while (getline(inputFile, line))
             {
                 myString+=line;
             }
-            len=myString.size();
+            
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
             nodeTree* Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
-            for(auto a: Huffcode)
-            {
-                cout <<" letter " <<a.first << " coding " << a.second << endl;
-            }
             result=Encode(Huffcode);        
             WriteFile(result);   // write the encoded string in a file
         }
+        cout << "Time spend for computing the result with I/O Operation: "<< usecs << endl;
     }
-    cout << usecs << ",1" << endl;
+    
+    
+    
+    //cout << usecs << ",1" << endl;  print used for the script
      
        
 }

@@ -1,9 +1,6 @@
 #include <iostream>
-#include <string>
 #include <string.h>
 #include <functional>
-#include <vector>
-#include <queue>
 #include <fstream>
 #include <algorithm>
 #include <thread>
@@ -21,15 +18,14 @@ int w; // number of workers
 //function  execute by each thread for compute the frequency
 void BodyParallel(int p,  vector<unordered_map<char,int>> &listmps)
 {   
-    int first,last;
+    int first,last; // first and last position of the string
     first=delta*p;
     if(p==w-1)
         last=len;
     else
         last=(p+1)*delta;
     for(int i=first;i<last;i++)
-    {
-       
+    {  
        listmps[p][myString[i]]++;
     }
 }
@@ -51,13 +47,14 @@ void ComputeFrequency(unordered_map<char,int> &mpp)
     }
    
     // overhead, Reconstructing a single ordered map
-    for (int i = 0; i < w; i++)
+    for (int i=0; i<w;i++)
     {
         for (auto j: listmps[i])
         {
             mpp[j.first] += j.second;
         }
     }
+   
 }
 
 // Functions  execute by each thread for parallel transform the string in binary values 
@@ -101,14 +98,12 @@ string Encode(unordered_map<char,string>Huffcode)
         result+= s;
     }
     
-    
     return result;
 }  
 
 // create a byte from a string of eight chars
 char CreateByte(string result)
 {
-    
     unsigned bufs=0;
     for(char a: result)
     {
@@ -121,17 +116,14 @@ char CreateByte(string result)
 void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
 {
     int first,last;
-    string output;
+    string output; // using local variable reduce the time
     first=delta*p;
     if(p==w-1)
         last=len;
     else
         last=(p+1)*delta;
-    
-    
     for(int i=first;i<last;i+=8)
     {
-
         output+=CreateByte(newstring.substr(i,8));
     }
     ResutlAscii[p]=output;
@@ -142,16 +134,21 @@ string AsciiTransform(string newstring)
     vector<thread*> Threads;
     vector<string> ResultAscii(w);
     string result;
+
     int bits;
     int size = newstring.size();
+    //padding of the string
     bits = size % 8;
     if(bits!=0)
     {
         bits = 8 - bits;
     }
     newstring.append(bits, '0');
+
     len=newstring.size();
+    
     delta=len/w;
+    //delta must be a multiple of eight
     bits=delta%8;
     if(bits!=0)
     {
@@ -228,11 +225,12 @@ int main(int argc, char * argv[])
         string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
         outFile.close(); 
+        cout << "Time spend for computing the result: "<< usecs <<" Using: " << w << " threads" <<endl;
     }
     else
     {
         {
-              // take the input string
+            // take the input string
             while (getline(inputFile, line))
             {
                 myString += line;
@@ -246,6 +244,8 @@ int main(int argc, char * argv[])
             outFile.write(Asciiresult.c_str(), Asciiresult.size());
             outFile.close();
         };
+        cout << "Time spend for computing the result with I/O Operation: "<< usecs <<" Using: " << w << " threads" << endl;
+
         
     }
     cout  << usecs << "," << w << endl; 

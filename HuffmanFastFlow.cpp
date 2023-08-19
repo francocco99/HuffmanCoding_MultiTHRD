@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <sstream>
 #include <ff/ff.hpp>
 #include <ff/parallel_for.hpp>
@@ -22,7 +21,7 @@ string Encode(unordered_map<char,string>Huffcode,string myString)
     vector<string> Codes(w,""); // vector of encoded chunks of the input file
     string result;
      pf.parallel_for_idx(0,myString.size(),1,0,[&Huffcode,&myString,&Codes](const long first,const long last,const int thid){
-        string temp;
+        string temp; // using local variable reduce the time
         for (long i =first; i < last; i++)
         {
             temp+=Huffcode[myString[i]];
@@ -39,22 +38,21 @@ string Encode(unordered_map<char,string>Huffcode,string myString)
 //compute frequency of the letter in the text
 void ComputeFrequency(unordered_map<char,int> &mpp,string myString)
 {
-    
-    ParallelFor pfr(w,true);
-    vector<unordered_map<char,int>> listmps(w);
-    
-    pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const int idx,const int thid){
-
-        listmps[thid][myString[idx]]++;
-    });
-    
-    for (int i = 0; i < w; i++)
+    ParallelForReduce<unordered_map<char,int>> pfr2(w);
+    unordered_map<char,int> result;
+    unordered_map<char,int> Initial;
+   
+    pfr2.parallel_reduce(mpp,Initial,0,myString.size(),1,0,[&](const int idx,unordered_map<char,int> &res)
     {
-        for (auto j: listmps[i])
+        res[myString[idx]]++; 
+    },
+    [&](unordered_map<char,int>& total,unordered_map<char,int> partial ){
+        for(auto elem: partial)
         {
-            mpp[j.first] += j.second;
+            total[elem.first]+=elem.second;
         }
-    }
+        
+    });
     
     
 }
@@ -72,33 +70,10 @@ char CreateByte(string result)
     return static_cast<char>(bufs);
      
 }
-//function to transform the encoded string to write it to a file
-void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
-{
-    
-    
-    int first,last;
-    string output;
-    first=delta*p;
-    if(p==w-1)
-        last=len;
-    else
-        last=(p+1)*delta;
-    
-    
-    for(int i=first;i<last;i+=8)
-    {
-      
-        output+=CreateByte(newstring.substr(i,8));
-    }
-    ResutlAscii[p]=output;
-    
-
-}
 
 string AsciiTransform(string newstring)
 {
-   
+    string result="";
     int bits;
     int size = newstring.size();
     bits = size % 8;
@@ -115,15 +90,24 @@ string AsciiTransform(string newstring)
         bits=8-bits;
         delta+=bits; 
     }
-    
-    string result="";
-    ParallelForReduce<string> pfr2(w);
-    pfr2.parallel_reduce(result,"",0,newstring.size(),8,delta,[&](const long i, string &myres){
-        myres+=CreateByte(newstring.substr(i,8));
-    },
-    [](string &s,const string e){s+=e;}
-    );
+    vector<string> ResultAscii(w);
+    ParallelForReduce<string> pfr(w);
+
+    pfr.parallel_for_idx(0,newstring.size(),1,delta,[&](const long first,const long last,const int thid){
+    string output;
+    cout << last-first << endl;
+    for(int i=first;i<last;i+=8)
+    {
+        output+=CreateByte(newstring.substr(i,8));
+    }
+     ResultAscii[thid]=output;
+    });
+    for( string s: ResultAscii)
+    {
+        result+= s;
+    }
     return result;
+
 }
  
 
@@ -169,15 +153,18 @@ int main(int argc, char * argv[])
         }
 
         {
+            
             utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
             nodeTree* Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode,myString);
         };
+       
         string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
         outFile.close(); 
+        cout << "Time spend for computing the result: "<< usec <<" Using: " << w << " threads" <<endl;
     }
     else
     {
@@ -195,8 +182,8 @@ int main(int argc, char * argv[])
             outFile.write(Asciiresult.c_str(), Asciiresult.size());
             outFile.close();
         };
-        
+        cout << "Time spend for computing the result with I/O Operation: "<< usec <<" Using: " << w << " threads" << endl;
     }  
     
-    cout  << usec << "," << w << endl; 
+   // cout  << usec << "," << w << endl; 
 }

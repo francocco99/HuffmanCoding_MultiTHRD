@@ -19,6 +19,8 @@ int w; // number of workers
 //vlues for compute the time
 long OverC;
 long OverE;
+long OverA;
+long AsciiComp;
 
 //function  execute by each thread for compute the frequency
 void BodyParallel(int p,  vector<unordered_map<char,int>> &listmps)
@@ -148,6 +150,7 @@ void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
 //function to transform the encoded string to write it to a file
 string AsciiTransform(string newstring)
 {
+    
     vector<thread*> Threads;
     vector<string> ResultAscii(w);
     string result;
@@ -167,19 +170,24 @@ string AsciiTransform(string newstring)
         bits=8-bits;
         delta+=bits; 
     }
-    cout << delta%8<<endl;
-    for(int i=0;i<w;i++)
-    { 
-        Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
-       
-    }
-    for(auto t: Threads)
     {
-        t->join();
+        utimer t0("parallel computation",&AsciiComp);
+        for(int i=0;i<w;i++)
+        { 
+            Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
+        
+        }
     }
-    for( string s: ResultAscii)
     {
-        result+= s;
+        utimer t0("parallel computation",&OverA);
+        for(auto t: Threads)
+        {
+            t->join();
+        }
+        for( string s: ResultAscii)
+        {
+            result+= s;
+        }
     }
     return result;
 }
@@ -216,11 +224,6 @@ int main(int argc, char * argv[])
         return 0;
     }
     // take the input string
-    while (getline(inputFile, line))
-    {
-        myString += line;
-    }
-   
     long usecRead;
     {
         utimer t0("parallel computation",&usecRead);
@@ -229,7 +232,7 @@ int main(int argc, char * argv[])
             myString += line;
         }
     }
-    cout <<"r, " << usecRead << endl;
+    cout <<"r," << usecRead << endl;
     //cout << "End spent for Read the  file " << usecRead << " usecs" << endl;
     
    
@@ -258,22 +261,22 @@ int main(int argc, char * argv[])
     
     cout << "F," << freq  << endl;
     cout << "b," << buildtemp <<  endl;
-    cout << "e," << encode  << endl;
-    cout << "oc, " << OverC <<endl;
-    cout << "oe, " << OverE <<endl;
+    cout << "enc," << encode  << endl;
+    cout << "oc," << OverC <<endl;
+    cout << "oe," << OverE <<endl;
+    
 
     // write in the file
     long usecWrite;
     {
         utimer t0("parallel computation",&usecWrite);
         string Asciiresult=AsciiTransform(result);
-        if (outFile.is_open()) 
-        {
-            outFile.write(Asciiresult.c_str(), Asciiresult.size());
-            outFile.close();  // Close the file
-        }
+        outFile.write(Asciiresult.c_str(), Asciiresult.size());
+        outFile.close();  // Close the file
+        
     }
-    cout <<"w, " << usecWrite << endl;
+    cout << "oa," << OverA << endl;
+    cout <<"w," << usecWrite << endl;
     //cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
      
        

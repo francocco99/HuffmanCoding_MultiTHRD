@@ -40,21 +40,22 @@ string Encode(unordered_map<char,string>Huffcode,string myString)
 void ComputeFrequency(unordered_map<char,int> &mpp,string myString)
 {
     
-    ParallelFor pfr(w,true);
-    vector<unordered_map<char,int>> listmps(w);
-    
-    pfr.parallel_for_thid(0,myString.size(),1,0,[&listmps,&myString](const int idx,const int thid){
-
-        listmps[thid][myString[idx]]++;
+  ParallelForReduce<unordered_map<char,int>> pfr2(w);
+    unordered_map<char,int> Initial;
+   
+    pfr2.parallel_reduce(mpp,Initial,0,myString.size(),1,0,[&](const int idx,unordered_map<char,int> &res)
+    {
+        res[myString[idx]]++; 
+    },
+    [&](unordered_map<char,int>& total,unordered_map<char,int> partial ){
+        for(auto elem: partial)
+        {
+            
+            total[elem.first]+=elem.second;
+        }
+        
     });
     
-    for (int i = 0; i < w; i++)
-    {
-        for (auto j: listmps[i])
-        {
-            mpp[j.first] += j.second;
-        }
-    }
     
     
 }
@@ -72,32 +73,10 @@ char CreateByte(string result)
     return static_cast<char>(bufs);
      
 }
-//function to transform the encoded string to write it to a file
-void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
-{
-    
-    
-    int first,last;
-    string output;
-    first=delta*p;
-    if(p==w-1)
-        last=len;
-    else
-        last=(p+1)*delta;
-    
-    
-    for(int i=first;i<last;i+=8)
-    {
-      
-        output+=CreateByte(newstring.substr(i,8));
-    }
-    ResutlAscii[p]=output;
-    
 
-}
 string AsciiTransform(string newstring)
 {
-   
+    string result="";
     int bits;
     int size = newstring.size();
     bits = size % 8;
@@ -114,15 +93,24 @@ string AsciiTransform(string newstring)
         bits=8-bits;
         delta+=bits; 
     }
+    vector<string> ResultAscii(w);
+    ParallelForReduce<string> pfr(w);
+
+    pfr.parallel_for_idx(0,newstring.size(),1,delta,[&](const long first,const long last,const int thid){
+    string output;
     
-    string result="";
-    ParallelForReduce<string> pfr2(w);
-    pfr2.parallel_reduce(result,"",0,newstring.size(),8,delta,[&](const long i, string &myres){
-        myres+=CreateByte(newstring.substr(i,8));
-    },
-    [](string &s,const string e){s+=e;}
-    );
+    for(int i=first;i<last;i+=8)
+    {
+        output+=CreateByte(newstring.substr(i,8));
+    }
+     ResultAscii[thid]=output;
+    });
+    for( string s: ResultAscii)
+    {
+        result+= s;
+    }
     return result;
+
 }
  
 
