@@ -1,7 +1,4 @@
 #include "BuildHuffman.hpp"
-#include <queue>
-#include <fstream>
-#include <sstream>
 
 /*function used to create the Huffman Tree
 mpp--> map of char,frequency

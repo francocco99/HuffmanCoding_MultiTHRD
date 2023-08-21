@@ -1,9 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <ff/ff.hpp>
 #include <ff/parallel_for.hpp>
-#include "utimer.hpp"
 #include "BuildHuffman.hpp"
 using namespace std;
 using namespace ff;
@@ -39,7 +35,6 @@ string Encode(unordered_map<char,string>Huffcode,string myString)
 void ComputeFrequency(unordered_map<char,int> &mpp,string myString)
 {
     ParallelForReduce<unordered_map<char,int>> pfr2(w);
-    unordered_map<char,int> result;
     unordered_map<char,int> Initial;
    
     pfr2.parallel_reduce(mpp,Initial,0,myString.size(),1,0,[&](const int idx,unordered_map<char,int> &res)
@@ -53,29 +48,27 @@ void ComputeFrequency(unordered_map<char,int> &mpp,string myString)
         }
         
     });
-    
-    
 }
 // create a byte from a string of eight chars
 char CreateByte(string result)
 {
-    
     unsigned bufs=0;
     for(char a: result)
-    {
-          
-        bufs=(bufs<<1) | (atoi(&a)) ; 
-       
+    {      
+        bufs=(bufs<<1) | (atoi(&a));    
     }
     return static_cast<char>(bufs);
      
 }
-
+// "ASCII Encoding" of the string
 string AsciiTransform(string newstring)
 {
     string result="";
+
     int bits;
     int size = newstring.size();
+    
+    //padding of the string
     bits = size % 8;
     if(bits!=0)
     {
@@ -85,6 +78,7 @@ string AsciiTransform(string newstring)
     len=newstring.size();
     delta=len/w;
     bits=delta%8;
+    //delta must be a multiple of eight
     if(bits!=0)
     {
         bits=8-bits;
@@ -95,13 +89,13 @@ string AsciiTransform(string newstring)
 
     pfr.parallel_for_idx(0,newstring.size(),1,delta,[&](const long first,const long last,const int thid){
     string output;
-    cout << last-first << endl;
-    for(int i=first;i<last;i+=8)
-    {
-        output+=CreateByte(newstring.substr(i,8));
-    }
-     ResultAscii[thid]=output;
+        for(int i=first;i<last;i+=8)
+        {
+            output+=CreateByte(newstring.substr(i,8));
+        }
+        ResultAscii[thid]=output;
     });
+    //reconstruct the string
     for( string s: ResultAscii)
     {
         result+= s;
@@ -135,7 +129,7 @@ int main(int argc, char * argv[])
     }
     
     mode=(argc<4 ? 0: atoi(argv[3]));
-    w=atoi(argv[2]);
+    w=atoi(argv[2]); //take number of workers
     Filename=argv[1]; // take the name of the file
     ifstream inputFile(Filename);// open the inputfilestream
     if(inputFile.good()==false)
@@ -152,8 +146,7 @@ int main(int argc, char * argv[])
             myString += line;
         }
 
-        {
-            
+        {     
             utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
             nodeTree* Root=BuildHuffman(mpp);
@@ -185,5 +178,7 @@ int main(int argc, char * argv[])
         cout << "Time spend for computing the result with I/O Operation: "<< usec <<" Using: " << w << " threads" << endl;
     }  
     
-   // cout  << usec << "," << w << endl; 
+    //print use for script
+    //cout  << usec << "," << w << endl; 
+
 }

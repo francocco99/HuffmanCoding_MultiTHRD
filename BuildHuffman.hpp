@@ -1,6 +1,12 @@
-
+#include <iostream>
+#include <string.h>
+#include <functional>
+#include <fstream>
+#include <algorithm>
 #include <string>
+#include <queue>
 #include <unordered_map>
+#include "utimer.hpp"
 
 using namespace std;
 //Strucutre of each node of the Huffman tree

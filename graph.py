@@ -3,9 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 #arr=np.loadtxt("thread.csv",delimiter=",",dtype=str)
 #display
-datat=pd.read_csv('Value10Mega/thread.csv')
-dataf=pd.read_csv('Value10Mega/fast.csv')
-datas=pd.read_csv('Value10Mega/sequential.csv')
+datat=pd.read_csv('thread.csv')
+dataf=pd.read_csv('fast.csv')
+datas=pd.read_csv('sequential.csv')
 
 xt=datat.nw
 yt=datat.usec
@@ -21,7 +21,7 @@ plt.figure(figsize=(10,10))
 plt.xlabel("number of workers")
 plt.ylabel("usecs used")
 plt.plot(xt,yt,color="black",marker="o",label='Thread')
-plt.plot(xf,yf,color="black",marker="*",label='Fast Flow')
+plt.plot(xf,yf,color="black",marker="*",label='Fast Flow',linestyle='dashed')
 plt.plot(xs,ys,color="black",marker="+",label='Sequential')
 plt.legend()
 
@@ -63,8 +63,8 @@ yf=dataEfficf.Effc
 plt.figure(figsize=(20,10))
 plt.xlabel("number of workers")
 plt.ylabel("Efficiency(n)")
-plt.plot(xt,yt,color="green",marker="o",label='Thread')
-plt.plot(xf,yf,color="red",marker="*",label='Fast')
+plt.plot(xt,yt,color="black",marker="o",label='Thread')
+plt.plot(xf,yf,color="black",marker="*",label='Fast',linestyle='dashed')
 #plt.plot(x,x+0,color="red",linestyle='dashed')
 plt.plot()
 
@@ -83,28 +83,28 @@ dataScalf=pd.DataFrame([],columns=['nw','Scalab'])
 
 par1T=datat.usec[0]
 par1F=dataf.usec[0]
-
+xt =[]
+yt=[]
+xt.append(0)
+yt.append(0)
+xf=[]
+yf=[]
+xf.append(0)
+yf.append(0)
 for index,row in datat.iterrows():
     Scalab=par1T/row["usec"]
-    newRow=pd.DataFrame({'nw':row["nw"],'Scalab':Scalab},index=[0])
-    #dataScal=dataScal.append(newRow,ignore_index=True)
-    dataScalt = pd.concat([newRow,dataScalt.loc[:]]).reset_index(drop=True)
+    xt.append(row["nw"])
+    yt.append(Scalab)
+    
 
 
 for index,row in dataf.iterrows():
     Scalab=par1T/row["usec"]
-    newRow=pd.DataFrame({'nw':row["nw"],'Scalab':Scalab},index=[0])
-    #dataScal=dataScal.append(newRow,ignore_index=True)
-    dataScalf = pd.concat([newRow,dataScalf.loc[:]]).reset_index(drop=True)
+    xf.append(row["nw"])
+    yf.append(Scalab)
 
 
 
-xt=dataScalt.nw
-yt=dataScalt.Scalab
-
-
-xf=dataScalf.nw
-yf=dataScalf.Scalab
 
 
 
@@ -114,9 +114,14 @@ ax = plt.axes()
 plt.figure(figsize=(20,10))
 plt.xlabel("number of workers")
 plt.ylabel("Scalability(n)")
-plt.plot(xt,yt,color="green",marker="o",label='Thread')
-plt.plot(xf,yf,color="red",marker="*",label='Fast')
-#plt.plot(x,x+0,color="red",linestyle='dashed')
+values=range(len(xt))
+
+plt.plot(values,yt,color="black",marker="o",label='Thread')
+plt.plot(values,yf,color="black",marker="*",label='Fast',linestyle='dashed')
+
+plt.xticks(values,xt)
+plt.ylim(0,7)
+
 plt.plot()
 
 
@@ -132,39 +137,49 @@ dataSpeedt=pd.DataFrame([],columns=['nw','Speed'])
 dataSpeedf=pd.DataFrame([],columns=['nw','Speed'])
 
 Sequentime=datas.usec[0]
-
+xt =[]
+yt=[]
+xt.append(0)
+yt.append(0)
+xf=[]
+yf=[]
+xf.append(0)
+yf.append(0)
 for index,row in datat.iterrows():
     Speed=Sequentime/row["usec"]
-    newRow=pd.DataFrame({'nw':row["nw"],'Speed':Speed},index=[0])
-    #dataScal=dataScal.append(newRow,ignore_index=True)
-    dataSpeedt = pd.concat([newRow,dataSpeedt.loc[:]]).reset_index(drop=True)
-
+    xt.append(row["nw"])
+    yt.append(Speed)
+   
+    
 for index,row in dataf.iterrows():
     Speed=Sequentime/row["usec"]
     newRow=pd.DataFrame({'nw':row["nw"],'Speed':Speed},index=[0])
-    #dataScal=dataScal.append(newRow,ignore_index=True)
-    dataSpeedf = pd.concat([newRow,dataSpeedf.loc[:]]).reset_index(drop=True)
+    xf.append(row["nw"])
+    yf.append(Speed)
 
-
-
-xt=dataSpeedt.nw
-yt=dataSpeedt.Speed
-
-
-xf=dataSpeedf.nw
-yf=dataSpeedf.Speed
+   
 
 
 
 
+print(xt)
+print(yt)
+id=yt
+values=range(len(xt))
+print(values)
 plt.figure(figsize=(20,10))
 plt.xlabel("number of workers")
 plt.ylabel("SpeedUp(n)")
 
 
-plt.plot(xt,yt,color="green",marker="o",label='Thread')
-plt.plot(xf,yf,color="red",marker="*",label='Fast')
-#plt.plot(x,x+0,color="red",linestyle='dashed')
+
+
+plt.plot(values,yt,color="black",marker="o",label='Thread')
+plt.plot(values,yf,color="black",marker="*",label='Fast',linestyle='dashed')
+plt.xticks(values,xt)
+plt.ylim(0,7)
+
+
 plt.plot()
 
 

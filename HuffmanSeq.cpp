@@ -1,9 +1,3 @@
-#include <iostream>
-#include <string.h>
-#include <functional>
-#include <fstream>
-#include <algorithm>
-#include "utimer.hpp"
 #include "BuildHuffman.hpp"
 
 using namespace std;
@@ -85,7 +79,7 @@ int main(int argc,char* argv[])
         cout << "Time spend for computing the result: "<< usecs << endl;
         WriteFile(result);   // write the encoded string in a file
     }
-    else
+    else // take also the time to write
     {
         
         {
@@ -101,12 +95,12 @@ int main(int argc,char* argv[])
             result=Encode(Huffcode);        
             WriteFile(result);   // write the encoded string in a file
         }
-        cout << "Time spend for computing the result with I/O Operation: "<< usecs << endl;
+       cout << "Time spend for computing the result with I/O Operation: "<< usecs << endl;
     }
     
     
-    
-    //cout << usecs << ",1" << endl;  print used for the script
+    //print for script
+    //cout << usecs << ",1" << endl;
      
        
 }

@@ -1,11 +1,3 @@
-#include <iostream>
-#include <string>
-#include <string.h>
-#include <functional>
-#include <queue>
-#include <fstream>
-#include <thread>
-#include "utimer.hpp"
 #include "BuildHuffman.hpp"
 
 
@@ -93,26 +85,31 @@ int main(int argc, char* argv[])
         result=Encode(Huffcode);
         
     }
-    /*cout << "End spent for Frequency " << freq << " usecs" << endl;
-    cout << "End spent for build and traverse " << buildtemp << " usecs" << endl;
-    cout << "End spent  encode " << encode << " usecs" << endl;*/
-
-    cout << "r," <<  usecRead << endl;
-    cout << "F," << freq  << endl;
-    cout << "b," << buildtemp <<  endl;
-    cout << "e," << encode  << endl;
-
-   
-
-
-
-   
     long usecWrite;
     {
         utimer t0("parallel computation",&usecWrite);
         WriteFile(result);
     }
-    cout << "w," << usecWrite  << endl;
-   // cout << "End spent for Write the encoded file " << usecWrite << " usecs" << endl;
+    
+    cout << endl;
+    cout << "Time spent reading the file: " << usecRead << " usecs" << endl;
+    cout << "-------------------------------------" << endl;
+    cout << "Time spent to compute the Frequency: " << freq << " usecs" << endl;
+    cout << "-------------------------------------" << endl;
+    cout << "Time spent to Build and Traverse the Huffman Tree: " << buildtemp << " usecs" << endl;
+    cout << "-------------------------------------" << endl;
+    cout << "Time spent to Encode the file " << encode << " usecs" << endl;  
+    cout << "-------------------------------------" << endl;
+    cout << "Time spent writing the  file " << usecWrite<< " usecs"  << endl;
+    cout << "-------------------------------------" << endl;
+    cout << endl;
+    cout << "TOTAL: " << usecRead+freq+buildtemp+encode+usecWrite << " usecs" << endl;
+    cout << endl;
+
+    /*cout << "r," <<  usecRead << endl;
+    cout << "F," << freq  << endl;
+    cout << "b," << buildtemp <<  endl;
+    cout << "e," << encode  << endl;
+    cout << "w," << usecWrite  << endl;*/
        
 }
