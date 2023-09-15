@@ -12,7 +12,7 @@ int w; // number of workers
 //function  execute by each thread for compute the frequency
 void BodyParallel(int p,  vector<unordered_map<char,int>> &listmps)
 {   
-    int first,last; // first and last position of the string
+    int first,last; // first and last position of the substring
     first=delta*p;
     if(p==w-1)
         last=len;
@@ -38,6 +38,7 @@ void ComputeFrequency(unordered_map<char,int> &mpp)
     for(auto t: Threads)
     {
         t->join();
+        delete(t);
     }
    
     // overhead, Reconstructing a single ordered map
@@ -56,7 +57,7 @@ void paralEncode(int p,vector<string>  &cds,unordered_map<char,string>Huffcode)
 {   
     int first,last;
     string output;
-    first=delta*p; // delta is the same of the frequecny function
+    first=delta*p; // delta is the same of the frequency function
     if(p==w-1)
         last=len;
     else
@@ -79,12 +80,13 @@ string Encode(unordered_map<char,string>Huffcode)
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(paralEncode,i, ref(Codes),Huffcode));
-       
     }
     for(auto t: Threads)
     {
         t->join();
+        delete(t);
     }
+    
     // Overhead for create a single result
     for( string s: Codes)
     {
@@ -109,6 +111,7 @@ char CreateByte(string result)
 void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
 {
     int first,last;
+    
     string output; // using local variable reduce the time
     first=delta*p;
     if(p==w-1)
@@ -136,7 +139,7 @@ string AsciiTransform(string newstring)
     {
         bits = 8 - bits;
     }
-    newstring.append(bits, '0');
+    newstring.append(bits, '0'); //append 0 to the end of the string
 
     len=newstring.size();
     
@@ -148,7 +151,6 @@ string AsciiTransform(string newstring)
         bits=8-bits;
         delta+=bits; 
     }
-    
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
@@ -157,6 +159,7 @@ string AsciiTransform(string newstring)
     for(auto t: Threads)
     {
         t->join();
+        delete(t);
     }
     for( string s: ResultAscii)
     {
@@ -168,13 +171,14 @@ string AsciiTransform(string newstring)
 int main(int argc, char * argv[])
 {
 
-    string Filename;
-    string result;
-    string line;
-    int mode;
+    string Filename; //name of the file
+    string result; //result of the encoding
+    string line; //line to read the file
+    int mode; // 0,1 
     
     ofstream outFile("textOut.bin",ios::out | ios::binary);
     
+    nodeTree* Root; //root of Huffman Tree
     unordered_map<char,int> mpp; // A map for each character with its frequency
     unordered_map<char,string>Huffcode; // map for each character the bit string 
     
@@ -211,37 +215,38 @@ int main(int argc, char * argv[])
         {
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode);
         };
         string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
         outFile.close(); 
-        cout << "Time spend for computing the result: "<< usecs <<" Using: " << w << " threads" <<endl;
+        //cout << "Time spend for computing the result: "<< usecs <<" Using: " << w << " threads" <<endl;
     }
     else
     {
         {
+            utimer t0("parallel computation",&usecs); 
             // take the input string
             while (getline(inputFile, line))
             {
                 myString += line;
             }
-            utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode);
             string Asciiresult=AsciiTransform(result);
             outFile.write(Asciiresult.c_str(), Asciiresult.size());
             outFile.close();
         };
-       cout << "Time spend for computing the result with I/O Operation: "<< usecs <<" Using: " << w << " threads" << endl;
+       //cout << "Time spend for computing the result with I/O Operation: "<< usecs <<" Using: " << w << " threads" << endl;
 
         
     }
+    DisposeTree(Root);
     //print use for script
-    //cout  << usecs << "," << w << endl; 
+    cout  << usecs << "," << w << endl; 
   
 }

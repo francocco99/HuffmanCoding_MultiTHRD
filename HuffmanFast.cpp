@@ -85,8 +85,7 @@ string AsciiTransform(string newstring)
         delta+=bits; 
     }
     vector<string> ResultAscii(w);
-    ParallelForReduce<string> pfr(w);
-
+    ParallelFor pfr(w);
     pfr.parallel_for_idx(0,newstring.size(),1,delta,[&](const long first,const long last,const int thid){
     string output;
         for(int i=first;i<last;i+=8)
@@ -113,6 +112,7 @@ int main(int argc, char * argv[])
     string line;
     int mode;
     
+    nodeTree* Root;
     ofstream outFile("textOut.bin",ios::out | ios::binary);
 
     unordered_map<char,int> mpp;// A map for each character with its frequency
@@ -149,7 +149,7 @@ int main(int argc, char * argv[])
         {     
             utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode,myString);
         };
@@ -157,28 +157,28 @@ int main(int argc, char * argv[])
         string Asciiresult=AsciiTransform(result);
         outFile.write(Asciiresult.c_str(), Asciiresult.size());
         outFile.close(); 
-        cout << "Time spend for computing the result: "<< usec <<" Using: " << w << " threads" <<endl;
+       // cout << "Time spend for computing the result: "<< usec <<" Using: " << w << " threads" <<endl;
     }
     else
     {
         {
+            utimer t0("parallel computation",&usec); 
             while (getline(inputFile, line))
             {
                 myString += line;
             }
-            utimer t0("parallel computation",&usec); 
             ComputeFrequency(ref(mpp),myString);
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode,myString);
             string Asciiresult=AsciiTransform(result);
             outFile.write(Asciiresult.c_str(), Asciiresult.size());
             outFile.close();
         };
-        cout << "Time spend for computing the result with I/O Operation: "<< usec <<" Using: " << w << " threads" << endl;
+       // cout << "Time spend for computing the result with I/O Operation: "<< usec <<" Using: " << w << " threads" << endl;
     }  
-    
+    DisposeTree(Root);
     //print use for script
-    //cout  << usec << "," << w << endl; 
+    cout  << usec << "," << w << endl; 
 
 }

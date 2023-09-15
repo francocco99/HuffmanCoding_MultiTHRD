@@ -18,10 +18,12 @@ struct nodeTree* BuildHuffman(unordered_map<char,int> mpp)
   
     while (pq.size()!=1)
     {
-        left=pq.top();pq.pop();
-        right=pq.top();pq.pop();
+        left=pq.top();
+        pq.pop();
+        right=pq.top();
+        pq.pop();
 
-        //create new internal node
+        //create new internal node, from the node with the lowest occurrences
         center=Newn('#',left->freq+right->freq);
         center->left=left;
         center->right=right;
@@ -58,13 +60,12 @@ void WriteFile(string result)
     {
         adds = 8 - adds;
     }
-    result.append(adds, '0');
+    result.append(adds, '0'); //adds 0 bit at the the end of the string
 
     ofstream out("textOut.bin",ios::out | ios::binary);
     unsigned bufs=0, bits=0;
     for(char a: result)
     {
-        
        if(bits==8)
         {
             out.put(bufs);      
@@ -82,6 +83,7 @@ void WriteFile(string result)
         out.put(bufs); 
     } 
 }
+
 //funtion that create the map that associate at each char the encoding, traversing the tree
 void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode)
 {
@@ -93,4 +95,13 @@ void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode)
 	}
     saveEncode(node->left,str+"0",Huffcode);
     saveEncode(node->right,str+"1",Huffcode);
+}
+//function to deallocate the tree
+void DisposeTree(nodeTree* node)
+{   
+    if(node ==nullptr)
+        return;
+    DisposeTree(node->left);
+    DisposeTree(node->right);
+    free(node);
 }

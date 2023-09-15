@@ -92,7 +92,7 @@ string AsciiTransform(string newstring)
         delta+=bits; 
     }
     vector<string> ResultAscii(w);
-    ParallelForReduce<string> pfr(w);
+    ParallelFor pfr(w);
 
     pfr.parallel_for_idx(0,newstring.size(),1,delta,[&](const long first,const long last,const int thid){
     string output; // each thread work on local variable
@@ -123,6 +123,7 @@ int main(int argc, char * argv[])
     string line;
     long usecRead;
 
+    nodeTree* Root;
     ofstream outFile("textOut.bin",ios::out | ios::binary);
 
     unordered_map<char,int> mpp;
@@ -166,7 +167,7 @@ int main(int argc, char * argv[])
     //build HuffmanTree
     {
         utimer t0("parallel computation",&buildtemp);
-        nodeTree* Root=BuildHuffman(mpp);
+        Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
     }
     //compute the encoding
@@ -217,6 +218,6 @@ int main(int argc, char * argv[])
         cout << "As," << AsciiComp << endl;
         cout << "oa," << OverA << endl;
         cout <<"w," << usecWrite << endl;*/
-  
+    DisposeTree(Root);
  
 }

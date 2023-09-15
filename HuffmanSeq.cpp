@@ -30,13 +30,13 @@ int main(int argc,char* argv[])
     string Filename; // name of the file in input
     string result;  //result of the encoding
     string line; //used for read the file
-    
+    nodeTree* Root; // root of the huffman tree
     int mode; // 0 / 1 used to print
 
     ofstream out("textOut.bin",ios::out | ios::binary);
 
     unordered_map<char,int> mpp; // A map for each character with its frequency
-    unordered_map<char,string>Huffcode;// map for each character the bit string 
+    unordered_map<char,string>Huffcode;// map for each character with the bit string 
    
   
 
@@ -52,6 +52,7 @@ int main(int argc,char* argv[])
 
 
     mode=(argc<3 ? 0: atoi(argv[2]));
+
     Filename=argv[1]; // take the name of the file
     ifstream inputFile(Filename);
     if(inputFile.good()==false)
@@ -71,36 +72,34 @@ int main(int argc,char* argv[])
         { 
             utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode);        
         
         };
-        cout << "Time spend for computing the result: "<< usecs << endl;
+        //cout << "Time spend for computing the result: "<< usecs << endl;
         WriteFile(result);   // write the encoded string in a file
     }
     else // take also the time to write
-    {
-        
+    {   
         {
+            utimer t0("parallel computation",&usecs); 
             while (getline(inputFile, line))
             {
                 myString+=line;
             }
-            
-            utimer t0("parallel computation",&usecs); 
             ComputeFrequency(ref(mpp));  
-            nodeTree* Root=BuildHuffman(mpp);
+            Root=BuildHuffman(mpp);
             saveEncode(Root,"",Huffcode);
             result=Encode(Huffcode);        
             WriteFile(result);   // write the encoded string in a file
         }
-       cout << "Time spend for computing the result with I/O Operation: "<< usecs << endl;
+       //cout << "Time spend for computing the result with I/O Operation: "<< usecs << endl;
     }
     
-    
+    DisposeTree(Root);
     //print for script
-    //cout << usecs << ",1" << endl;
+    cout << usecs << ",1" << endl;
      
        
 }

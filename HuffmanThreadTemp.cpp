@@ -40,13 +40,15 @@ void ComputeFrequency(unordered_map<char,int> &mpp)
     {
         Threads.push_back(new thread(BodyParallel,i,ref(listmps)));
     }
-    {
-        // overhead, Reconstructing a single ordered map
-        utimer t0("parallel computation",&OverC);
+    
         for(auto t: Threads)
         {
             t->join();
+            delete(t);
         }
+    {
+        // overhead, Reconstructing a single ordered map
+        utimer t0("parallel computation",&OverC);
         for (int i = 0; i < w; i++)
         {
             for (auto j: listmps[i])
@@ -89,12 +91,14 @@ string Encode(unordered_map<char,string>Huffcode)
        
     }
     // Overhead for create a single result
-    {
-        utimer t0("parallel computation",&OverE);
+   
         for(auto t: Threads)
         {
             t->join();
-        }
+            delete(t);
+        } 
+    {
+        utimer t0("parallel computation",&OverE);
         for( string s: Codes)
         {
             result+= s;
@@ -129,7 +133,6 @@ void EncodeinAscii(string newstring,int p,vector<string> &ResutlAscii)
         last=(p+1)*delta;
     for(int i=first;i<last;i+=8)
     {
-
         output+=CreateByte(newstring.substr(i,8));
     }
     ResutlAscii[p]=output;
@@ -149,7 +152,7 @@ string AsciiTransform(string newstring)
     {
         bits = 8 - bits;
     }
-    newstring.append(bits, '0');
+    newstring.append(bits, '0'); //append 0 at the end of the string
     len=newstring.size();
     delta=len/w;
     //delta must be a multiple of eight
@@ -162,15 +165,16 @@ string AsciiTransform(string newstring)
     for(int i=0;i<w;i++)
     { 
         Threads.push_back(new thread(EncodeinAscii,newstring,i, ref(ResultAscii)));
-    
     }
-    {
-        //overhead join + reconstruct the result
-        utimer t0("parallel computation",&OverA);
+    
         for(auto t: Threads)
         {
             t->join();
+            delete(t);
         }
+    {
+        //overhead reconstruct the result
+        utimer t0("parallel computation",&OverA);
         for( string s: ResultAscii)
         {
             result+= s;
@@ -187,6 +191,7 @@ int main(int argc, char * argv[])
     string Asciiresult;
     string line;
     
+    nodeTree* Root;
     ofstream outFile("textOut.bin",ios::out | ios::binary);
     
     unordered_map<char,int> mpp; // A map for each character with its frequency
@@ -233,7 +238,7 @@ int main(int argc, char * argv[])
     {
 
         utimer t0("parallel computation",&buildtemp);
-        nodeTree* Root=BuildHuffman(mpp);
+        Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
     }
     //compute the encoding
@@ -275,6 +280,9 @@ int main(int argc, char * argv[])
     cout << "TOTAL: " << usecRead+freq+buildtemp+encode+usecWrite+AsciiComp << " usecs" << endl;
     cout << endl;
 
+
+
+    DisposeTree(Root);
 
     //print use for script
     /*

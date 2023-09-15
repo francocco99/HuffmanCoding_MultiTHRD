@@ -12,8 +12,8 @@ using namespace std;
 //Strucutre of each node of the Huffman tree
 struct nodeTree
 {
-    char a;
-    int freq;
+    char a; //char
+    int freq; //frequenzi of the char
     nodeTree *left, *right;
 };
 //The function used for managing the priority queue
@@ -30,6 +30,9 @@ struct nodeTree* BuildHuffman(unordered_map<char,int> mpp);
 
 //Function used to construct the mapping of each character's encoding
 void saveEncode(nodeTree* node,string str, unordered_map<char,string>&Huffcode);
+
+//function  used to deallocate the tree
+void DisposeTree(nodeTree* node);
 
 //function used to perform ASCII encoding, only used by the sequential implementation
 void WriteFile(string result);

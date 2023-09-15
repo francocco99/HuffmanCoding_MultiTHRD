@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
     string Filename;
     string result;
     string line;
+
+    nodeTree* Root;
     ofstream out("textOut.bin",ios::out | ios::binary);
     unordered_map<char,int> mpp; // A map for each character with its frequency
     unordered_map<char,string>Huffcode;// map for each character the bit string 
@@ -77,7 +79,7 @@ int main(int argc, char* argv[])
     
     {
         utimer t0("parallel computation",&buildtemp);  
-        nodeTree* Root=BuildHuffman(mpp);
+        Root=BuildHuffman(mpp);
         saveEncode(Root,"",Huffcode);
     }   
     {
@@ -106,6 +108,9 @@ int main(int argc, char* argv[])
     cout << "TOTAL: " << usecRead+freq+buildtemp+encode+usecWrite << " usecs" << endl;
     cout << endl;
 
+
+
+    DisposeTree(Root);
     /*cout << "r," <<  usecRead << endl;
     cout << "F," << freq  << endl;
     cout << "b," << buildtemp <<  endl;
