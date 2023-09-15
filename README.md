@@ -7,6 +7,7 @@ In addition to writing the decompressed file, the elapsed times for performing t
 
 ![Alt text](https://media.geeksforgeeks.org/wp-content/uploads/20220906180456/6.png)
 
+In addition to the various implementations, there is also a **.py** file for creating performance graphs for the different implementations, as well as **.sh** files, one for running the three implementations a certain number of times and one for calculating time statistics.
 ### Instruction To Execute
 
 • **make all** to compile all the files  
