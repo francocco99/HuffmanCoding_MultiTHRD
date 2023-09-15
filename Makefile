@@ -12,7 +12,7 @@ HuffmanFast: HuffmanFast.cpp
 	$(CC)   BuildHuffman.hpp -o HuffmanFast.out BuildHuffman.cpp  HuffmanFast.cpp    $(CFLAGS) $(THREAD)
 
 HuffmanSeqTemp: HuffmanSeqTemp.cpp
-	$(CC)   BuildHuffman.hpp -o  HuffmanSeqTemp.out BuildHuffman.cpp HuffmanSeqTemp.cpp    $(CFLAGS) $(THREAD)
+	$(CC)   BuildHuffman.hpp -o  HuffmanSeqTemp.out BuildHuffman.cpp HuffmanSeqTemp.cpp    $(CFLAGS) 
 
 HuffmanThreadTemp: HuffmanThreadTemp.cpp
 	$(CC)   BuildHuffman.hpp -o HuffmanThreadTemp.out BuildHuffman.cpp HuffmanThreadTemp.cpp     $(CFLAGS) $(THREAD)
@@ -27,4 +27,4 @@ all: HuffmanSeq HuffmanThread HuffmanFast HuffmanSeqTemp HuffmanThreadTemp Huffm
 
 
 cleanall:
-	rm -f HuffmanSeq.out HuffmanThread.out HuffmanFastFlow.out HuffmanSeqTemp.out HuffmanThreadTemp.out  HuffmanFastTemp.out
+	rm -f HuffmanSeq.out HuffmanThread.out HuffmanFast.out HuffmanSeqTemp.out HuffmanThreadTemp.out  HuffmanFastTemp.out
